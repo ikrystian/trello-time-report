@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Raportowanie czasu</title>
+  <script src="https://p.trellocdn.com/power-up.min.js"></script>
+  <script src="./js/time-entry-form.js"></script>
+</head>
+<body>
+  <form id="time-entry-form">
+    <div>
+      <label for="estimated-time">Szacunkowy czas wykonania (w minutach):</label>
+      <input type="number" id="estimated-time" name="estimated-time" min="0" />
+    </div>
+    <div>
+      <label for="hours">Godziny:</label>
+      <input type="number" id="hours" name="hours" min="0" value="0" />
+    </div>
+    <div>
+      <label for="minutes">Minuty:</label>
+      <select id="minutes" name="minutes">
+        <option value="0">0</option>
+        <option value="30">30</option>
+      </select>    
+    </div>
+    <div>
+      <label for="description">Opis wykonanej pracy:</label>
+      <textarea id="description" name="description" rows="3"></textarea>
+    </div>
+    <button type="submit" id="save-button">Zapisz czas</button>
+    <button type="button" id="cancel-button">Anuluj</button>
+  </form>
+</body>
+</html>

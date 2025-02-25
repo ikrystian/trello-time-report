@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Brak raportów czasu</title>
+  <script src="https://p.trellocdn.com/power-up.min.js"></script>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Noto Sans, Ubuntu, Droid Sans, Helvetica Neue, sans-serif;
+      font-size: 14px;
+      line-height: 20px;
+      margin: 0;
+      padding: 8px;
+      color: #6b778c;
+    }
+    .empty-message {
+      text-align: center;
+      margin: 10px 0;
+    }
+    .add-time-button {
+      display: block;
+      margin: 10px auto;
+      padding: 6px 12px;
+      background-color: #0079bf;
+      border: none;
+      border-radius: 3px;
+      color: white;
+      cursor: pointer;
+      font-weight: normal;
+      text-align: center;
+    }
+    .add-time-button:hover {
+      background-color: #026aa7;
+    }
+  </style>
+  <script>
+    var t = TrelloPowerUp.iframe();
+    
+    document.addEventListener('DOMContentLoaded', function() {
+      document.getElementById('add-time-button').addEventListener('click', function() {
+        t.modal({
+          title: 'Raportowanie czasu',
+          url: './time-entry-form.html',
+          height: 400
+        });
+      });
+      
+      // Dopasowanie wysokości iframe
+      t.sizeTo(document.body).done();
+    });
+  </script>
+</head>
+<body>
+  <div class="empty-message">Nie zarejestrowano jeszcze czasu dla tego zadania</div>
+  <button id="add-time-button" class="add-time-button">Dodaj raport czasu</button>
+</body>
+</html>

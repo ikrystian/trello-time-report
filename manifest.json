@@ -1,0 +1,22 @@
+{
+  "name": "Time Tracker Power-Up",
+  "details": "Power-Up do raportowania czasu spędzonego nad zadaniami w Trello",
+  "icon": {
+    "url": "https://img.icons8.com/ios-filled/50/000000/clock--v1.png"
+  },
+  "author": "Twoje Imię",
+  "capabilities": [
+    "callback",
+    "card-badges",
+    "card-detail-badges",
+    "card-buttons",
+    "board-buttons",
+    "card-back-section",
+    "show-settings"
+  ],
+  "connectors": {
+    "iframe": {
+      "url": "./index.html"
+    }
+  }
+}
