@@ -50,7 +50,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     });
             })
             .then(function() {
-                console.log('Czas został zapisany.');
                 t.closeModal();
             })
             .catch(function(err) {
