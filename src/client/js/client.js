@@ -39,14 +39,14 @@ function calculateTotalTime(timeEntries) {
 // Główna logika Power-Up
 TrelloPowerUp.initialize({
     // Przyciski na tablicy
-    'board-buttons': function(t) {
+    'board-buttons': function (t) {
         return [{
             icon: {
                 dark: 'https://img.icons8.com/ios-filled/50/000000/clock--v1.png',
                 light: 'https://img.icons8.com/ios-filled/50/ffffff/clock--v1.png'
             },
             text: 'Raporty czasu',
-            callback: function(t) {
+            callback: function (t) {
                 return t.modal({
                     title: 'Raporty czasu dla całej tablicy',
                     url: './time-report.html',
@@ -56,12 +56,12 @@ TrelloPowerUp.initialize({
         }];
     },
     // Dodanie znacznika czasu na karty
-    'card-badges': function(t) {
+    'card-badges': function (t) {
         return Promise.all([
             t.get('card', 'shared', TIME_ENTRIES_KEY),
             t.get('card', 'shared', ESTIMATED_TIME_KEY)
         ])
-            .then(function([timeEntries, estimatedTime]) {
+            .then(function ([timeEntries, estimatedTime]) {
                 const badges = [];
 
                 // Badge dla zaraportowanego czasu
@@ -85,12 +85,12 @@ TrelloPowerUp.initialize({
             });
     },
     // Szczegółowe informacje o czasie na kartach
-    'card-detail-badges': function(t) {
+    'card-detail-badges': function (t) {
         return Promise.all([
             t.get('card', 'shared', TIME_ENTRIES_KEY),
             t.get('card', 'shared', ESTIMATED_TIME_KEY)
         ])
-            .then(function([timeEntries, estimatedTime]) {
+            .then(function ([timeEntries, estimatedTime]) {
                 const badges = [];
 
                 // Badge dla zaraportowanego czasu
@@ -100,7 +100,7 @@ TrelloPowerUp.initialize({
                         title: 'Czas spędzony',
                         text: formatTime(totalMinutes),
                         color: 'blue',
-                        callback: function(t) {
+                        callback: function (t) {
                             return t.modal({
                                 title: 'Historia czasu',
                                 url: './time-history.html',
@@ -116,7 +116,7 @@ TrelloPowerUp.initialize({
                         title: 'Szacowany czas',
                         text: formatTime(estimatedTime),
                         color: 'green',
-                        callback: function(t) {
+                        callback: function (t) {
                             return t.modal({
                                 title: 'Szacowany czas',
                                 url: './estimated-time-form.html',
@@ -130,12 +130,12 @@ TrelloPowerUp.initialize({
             });
     },
     // Przyciski dostępne w menu karty
-    'card-buttons': function(t) {
+    'card-buttons': function (t) {
         return [
             {
                 icon: 'https://img.icons8.com/ios-filled/50/000000/clock--v1.png',
                 text: 'Raportuj czas',
-                callback: function(t) {
+                callback: function (t) {
                     return t.modal({
                         title: 'Raportowanie czasu',
                         url: './time-entry-form.html',
@@ -146,7 +146,7 @@ TrelloPowerUp.initialize({
             {
                 icon: 'https://img.icons8.com/ios-filled/50/000000/estimate.png',
                 text: 'Ustaw szacowany czas',
-                callback: function(t) {
+                callback: function (t) {
                     return t.modal({
                         title: 'Szacowany czas wykonania',
                         url: './estimated-time-form.html',
@@ -157,9 +157,9 @@ TrelloPowerUp.initialize({
         ];
     },
     // Sekcja po opisie karty
-    'card-back-section': function(t) {
+    'card-back-section': function (t) {
         return t.get('card', 'shared', TIME_ENTRIES_KEY)
-            .then(function(timeEntries) {
+            .then(function (timeEntries) {
                 if (!timeEntries || !timeEntries.length) {
                     return {
                         title: 'Raportowanie czasu',
@@ -184,7 +184,7 @@ TrelloPowerUp.initialize({
             });
     },
     // Rejestracja innych możliwości Power-Up
-    'show-settings': function(t) {
+    'show-settings': function (t) {
         return t.modal({
             title: 'Ustawienia raportowania czasu',
             url: './settings.html',
@@ -192,6 +192,6 @@ TrelloPowerUp.initialize({
         });
     }
 }, {
-    appKey: 'your-app-key',
+    appKey: '88df51e8c59291881f573b738be03d43',
     appName: 'Time Tracker Power-Up'
 });
