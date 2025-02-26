@@ -5,46 +5,57 @@ const TIME_ENTRIES_KEY = 'timeEntries';
 
 // Funkcja inicjalizująca formularz
 document.addEventListener('DOMContentLoaded', function() {
-  // Obsługa przycisku anulowania
-  document.getElementById('cancel-button').addEventListener('click', function() {
-    t.closeModal();
-  });
+    // Obsługa przycisku anulowania
+    document.getElementById('cancel-button').addEventListener('click', function() {
+        t.closeModal();
+    });
 
-  // Obsługa formularza zapisu czasu
-  document.getElementById('time-entry-form').addEventListener('submit', function(event) {
-    event.preventDefault();
+    // Obsługa formularza zapisu czasu
+    document.getElementById('time-entry-form').addEventListener('submit', function(event) {
+        event.preventDefault();
 
-    const hours = parseInt(document.getElementById('hours').value, 10) || 0;
-    const minutes = parseInt(document.getElementById('minutes').value, 10) || 0;
-    const description = document.getElementById('description').value;
+        const hours = parseInt(document.getElementById('hours').value, 10) || 0;
+        const minutes = parseInt(document.getElementById('minutes').value, 10) || 0;
+        const description = document.getElementById('description').value;
 
-    // Sprawdzenie, czy wprowadzono jakiś czas
-    if (hours === 0 && minutes === 0) {
-      alert('Proszę wprowadzić czas większy niż 0.');
-      return;
-    }
+        // Sprawdzenie, czy wprowadzono jakiś czas
+        if (hours === 0 && minutes === 0) {
+            alert('Proszę wprowadzić czas większy niż 0.');
+            return;
+        }
 
-    // Pobranie istniejących wpisów czasu
-    t.get('card', 'shared', TIME_ENTRIES_KEY)
-        .then(function(timeEntries) {
-          const currentEntries = timeEntries || [];
+        // Pobranie danych zalogowanego użytkownika
+        t.member('fullName')
+            .then(function(member) {
+                const username = member ? member.fullName : 'Nieznany użytkownik';
 
-          // Dodanie nowego wpisu
-          const newEntry = {
-            date: new Date().toISOString(),
-            hours: hours,
-            minutes: minutes,
-            description: description
-          };
+                // Pobranie istniejących wpisów czasu
+                return t.get('card', 'shared', TIME_ENTRIES_KEY)
+                    .then(function(timeEntries) {
+                        const currentEntries = timeEntries || [];
 
-          currentEntries.push(newEntry);
+                        // Dodanie nowego wpisu
+                        const newEntry = {
+                            date: new Date().toISOString(),
+                            hours: hours,
+                            minutes: minutes,
+                            description: description,
+                            username: username
+                        };
 
-          // Zapisanie zaktualizowanych wpisów
-          return t.set('card', 'shared', TIME_ENTRIES_KEY, currentEntries);
-        })
-        .then(function() {
-          console.log('Czas został zapisany.');
-          t.closeModal();
-        });
-  });
+                        currentEntries.push(newEntry);
+
+                        // Zapisanie zaktualizowanych wpisów
+                        return t.set('card', 'shared', TIME_ENTRIES_KEY, currentEntries);
+                    });
+            })
+            .then(function() {
+                console.log('Czas został zapisany.');
+                t.closeModal();
+            })
+            .catch(function(err) {
+                console.error('Wystąpił błąd podczas zapisywania czasu:', err);
+                alert('Wystąpił błąd podczas zapisywania czasu. Spróbuj ponownie.');
+            });
+    });
 });
