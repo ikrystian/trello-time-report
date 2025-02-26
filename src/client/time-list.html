@@ -17,6 +17,7 @@
     .time-entry {
       margin-bottom: 10px;
       padding-bottom: 8px;
+      border-bottom: 1px solid #eaecef;
     }
     .time-entry:last-child {
       border-bottom: none;
@@ -36,7 +37,7 @@
       margin-top: 4px;
       word-break: break-word;
     }
-    .see-all-button {
+    .button {
       display: block;
       margin-top: 12px;
       padding: 6px 12px;
@@ -47,17 +48,64 @@
       text-align: center;
       width: 100%;
     }
-
+    .see-all-button {
+      background-color: #ebecf0;
+      color: #172b4d;
+    }
+    .see-all-button:hover {
+      background-color: #dfe1e6;
+    }
+    .add-time-button {
+      background-color: #0079bf;
+      color: white;
+    }
+    .add-time-button:hover {
+      background-color: #026aa7;
+    }
+    .estimated-time-container {
+      margin-bottom: 10px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #eaecef;
+      display: none;
+    }
+    .estimated-time {
+      font-weight: bold;
+      color: #5aac44;
+    }
+    .edit-estimate-button {
+      background: none;
+      border: none;
+      color: #5e6c84;
+      cursor: pointer;
+      font-size: 12px;
+      margin-left: 8px;
+      padding: 0;
+      text-decoration: underline;
+    }
+    .edit-estimate-button:hover {
+      color: #172b4d;
+    }
     .total-time {
       font-weight: bold;
       margin-bottom: 10px;
       padding-bottom: 10px;
+      border-bottom: 1px solid #eaecef;
     }
   </style>
 </head>
 <body>
+<div id="container">
+  <div id="estimated-time-container" class="estimated-time-container">
+    <span id="estimated-time" class="estimated-time">Szacowany czas: Ładowanie...</span>
+    <button id="edit-estimate-button" class="edit-estimate-button">Edytuj</button>
+  </div>
+
   <div class="total-time" id="total-time">Łączny czas: Ładowanie...</div>
+
   <div id="time-entries-list">Ładowanie...</div>
-  <button id="see-all-button" class="see-all-button" style="display: none;">Zobacz wszystkie</button>
+
+  <button id="see-all-button" class="button see-all-button" style="display: none;">Zobacz wszystkie</button>
+  <button id="add-time-button" class="button add-time-button">Dodaj raport czasu</button>
+</div>
 </body>
 </html>

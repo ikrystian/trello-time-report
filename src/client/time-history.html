@@ -6,20 +6,89 @@
   <script src="https://p.trellocdn.com/power-up.min.js"></script>
   <link rel="stylesheet" href="https://p.trellocdn.com/power-up.css" />
   <script src="./js/time-history.js"></script>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Noto Sans, Ubuntu, Droid Sans, Helvetica Neue, sans-serif;
+      font-size: 14px;
+      line-height: 20px;
+      margin: 0;
+      padding: 16px;
+    }
+    h2 {
+      font-size: 16px;
+      margin-top: 24px;
+      margin-bottom: 8px;
+    }
+    .time-entry {
+      background-color: #f4f5f7;
+      border-radius: 3px;
+      padding: 12px;
+      margin-bottom: 12px;
+    }
+    .time-entry p {
+      margin: 6px 0;
+    }
+    .time-entry hr {
+      border: none;
+      border-top: 1px solid #dfe1e6;
+      margin: 12px 0 6px 0;
+    }
+    .button-container {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 24px;
+    }
+    button {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 3px;
+      cursor: pointer;
+    }
+    #back-button {
+      background-color: #ebecf0;
+    }
+    #back-button:hover {
+      background-color: #dfe1e6;
+    }
+    #export-button {
+      background-color: #0079bf;
+      color: white;
+    }
+    #export-button:hover {
+      background-color: #026aa7;
+    }
+    .edit-estimate-button, .add-estimate-button {
+      padding: 2px 8px;
+      margin-left: 8px;
+      font-size: 12px;
+      background-color: #ebecf0;
+      color: #172b4d;
+    }
+    .edit-estimate-button:hover, .add-estimate-button:hover {
+      background-color: #dfe1e6;
+    }
+    #time-entries-list {
+      max-height: 300px;
+      overflow-y: auto;
+      margin-bottom: 24px;
+    }
+  </style>
 </head>
 <body>
-  <div>
-    <h2>Szacunkowy czas:</h2>
-    <p id="estimated-time-display">Ładowanie...</p>
-    
-    <h2>Łączny czas spędzony:</h2>
-    <p id="total-time-display">Ładowanie...</p>
-    
-    <h2>Historia raportów czasu:</h2>
-    <div id="time-entries-list">Ładowanie...</div>
-    
+<div>
+  <h2>Szacunkowy czas:</h2>
+  <p id="estimated-time-display">Ładowanie...</p>
+
+  <h2>Łączny czas spędzony:</h2>
+  <p id="total-time-display">Ładowanie...</p>
+
+  <h2>Historia raportów czasu:</h2>
+  <div id="time-entries-list">Ładowanie...</div>
+
+  <div class="button-container">
     <button id="back-button">Powrót</button>
     <button id="export-button">Eksportuj do CSV</button>
   </div>
+</div>
 </body>
 </html>

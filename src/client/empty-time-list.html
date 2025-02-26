@@ -18,9 +18,13 @@
       text-align: center;
       margin: 10px 0;
     }
-    .add-time-button {
-      display: block;
-      margin: 10px auto;
+    .buttons-container {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .time-button {
       padding: 6px 12px;
       background-color: #0079bf;
       border: none;
@@ -30,13 +34,26 @@
       font-weight: normal;
       text-align: center;
     }
-    .add-time-button:hover {
+    .time-button:hover {
       background-color: #026aa7;
+    }
+    .estimate-button {
+      padding: 6px 12px;
+      background-color: #5aac44;
+      border: none;
+      border-radius: 3px;
+      color: white;
+      cursor: pointer;
+      font-weight: normal;
+      text-align: center;
+    }
+    .estimate-button:hover {
+      background-color: #519839;
     }
   </style>
   <script>
     var t = TrelloPowerUp.iframe();
-    
+
     document.addEventListener('DOMContentLoaded', function() {
       document.getElementById('add-time-button').addEventListener('click', function() {
         t.modal({
@@ -45,14 +62,25 @@
           height: 400
         });
       });
-      
+
+      document.getElementById('add-estimate-button').addEventListener('click', function() {
+        t.modal({
+          title: 'Szacowany czas wykonania',
+          url: './estimated-time-form.html',
+          height: 200
+        });
+      });
+
       // Dopasowanie wysokości iframe
       t.sizeTo(document.body).done();
     });
   </script>
 </head>
 <body>
-  <div class="empty-message">Nie zarejestrowano jeszcze czasu dla tego zadania</div>
-  <button id="add-time-button" class="add-time-button">Dodaj raport czasu</button>
+<div class="empty-message">Nie zarejestrowano jeszcze czasu dla tego zadania</div>
+<div class="buttons-container">
+  <button id="add-time-button" class="time-button">Dodaj raport czasu</button>
+  <button id="add-estimate-button" class="estimate-button">Ustaw szacowany czas</button>
+</div>
 </body>
 </html>
