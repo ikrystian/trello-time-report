@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Raport czasu dla tablicy</title>
+  <script src="https://p.trellocdn.com/power-up.min.js"></script>
+  <link rel="stylesheet" href="https://p.trellocdn.com/power-up.css" />
+  <script src="./js/time-report.js"></script>
+</head>
+<body>
+  <div>
+    <h2>Raport czasu dla całej tablicy</h2>
+    
+    <div>
+      <label for="date-from">Od daty:</label>
+      <input type="date" id="date-from">
+      
+      <label for="date-to">Do daty:</label>
+      <input type="date" id="date-to">
+      
+      <button id="filter-button">Filtruj</button>
+    </div>
+    
+    <div>
+      <h3>Łączny czas dla tablicy:</h3>
+      <p id="board-total-time">Ładowanie...</p>
+      
+      <h3>Raporty czasu według list:</h3>
+      <div id="list-time-reports">Ładowanie...</div>
+      
+      <h3>Raporty czasu według kart:</h3>
+      <div id="card-time-reports">Ładowanie...</div>
+      
+      <button id="export-board-button">Eksportuj do CSV</button>
+      <button id="close-button">Zamknij</button>
+    </div>
+  </div>
+</body>
+</html>
