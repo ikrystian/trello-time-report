@@ -51,9 +51,9 @@ document.addEventListener('DOMContentLoaded', function() {
         };
         
         currentEntries.push(newEntry);
-        
         // Zapisanie zaktualizowanych wpisów
         return t.set('card', 'shared', TIME_ENTRIES_KEY, currentEntries);
+        
       })
       .then(function() {
         // Zapisanie szacunkowego czasu tylko jeśli nie był wcześniej ustawiony
@@ -63,6 +63,7 @@ document.addEventListener('DOMContentLoaded', function() {
         return Promise.resolve();
       })
       .then(function() {
+        console.log('Czas został zapisany.');
         t.closeModal();
       });
   });
