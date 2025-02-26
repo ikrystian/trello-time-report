@@ -97,10 +97,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 entries.sort((a, b) => new Date(b.date) - new Date(a.date));
 
                 const entriesHtml = entries.map(entry => {
+                    const username = entry.username || 'Nieznany użytkownik';
                     return `
             <div class="time-entry">
               <p><strong>Data:</strong> ${formatDate(entry.date)}</p>
               <p><strong>Czas:</strong> ${formatTime(entry.hours * 60 + entry.minutes)}</p>
+              <p><strong>Użytkownik:</strong> ${username}</p>
               <p><strong>Opis:</strong> ${entry.description || 'Brak opisu'}</p>
               <hr>
             </div>
@@ -114,13 +116,14 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('export-button').addEventListener('click', function() {
                 // Utworzenie zawartości CSV
                 const csvContent = [
-                    ['Nazwa zadania', 'Data', 'Godziny', 'Minuty', 'Czas łącznie', 'Opis', 'Szacunkowy czas'],
+                    ['Nazwa zadania', 'Data', 'Godziny', 'Minuty', 'Czas łącznie', 'Użytkownik', 'Opis', 'Szacunkowy czas'],
                     ...entries.map(entry => [
                         cardName,
                         formatDate(entry.date),
                         entry.hours,
                         entry.minutes,
                         formatTime(entry.hours * 60 + entry.minutes),
+                        entry.username || 'Nieznany użytkownik',
                         entry.description || '',
                         estimatedTime ? formatTime(estimatedTime) : 'Nie określono'
                     ])

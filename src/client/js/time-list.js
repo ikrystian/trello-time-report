@@ -75,12 +75,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 entriesList.textContent = 'Brak wpisów o czasie';
             } else {
                 const entriesHtml = displayEntries.map(entry => {
+                    const username = entry.username || 'Nieznany użytkownik';
                     return `
             <div class="time-entry">
               <div class="time-entry-header">
                 <span class="time-entry-time">${formatTime(entry.hours * 60 + entry.minutes)}</span>
                 <span class="time-entry-date">${formatDate(entry.date)}</span>
               </div>
+              <div class="time-entry-user">Dodał: ${username}</div>
               <div class="time-entry-description">${entry.description || 'Brak opisu'}</div>
             </div>
           `;

@@ -6,34 +6,76 @@
   <script src="https://p.trellocdn.com/power-up.min.js"></script>
   <link rel="stylesheet" href="https://p.trellocdn.com/power-up.css" />
   <script src="./js/time-report.js"></script>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Noto Sans, Ubuntu, Droid Sans, Helvetica Neue, sans-serif;
+      font-size: 14px;
+      line-height: 20px;
+      margin: 0;
+      padding: 16px;
+    }
+    .report-section {
+      margin-bottom: 24px;
+    }
+    .filter-section {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    button {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 3px;
+      cursor: pointer;
+    }
+    #filter-button, #export-board-button {
+      background-color: #0079bf;
+      color: white;
+    }
+    #close-button {
+      background-color: #ebecf0;
+    }
+  </style>
 </head>
 <body>
-  <div>
-    <h2>Raport czasu dla całej tablicy</h2>
-    
-    <div>
-      <label for="date-from">Od daty:</label>
-      <input type="date" id="date-from">
-      
-      <label for="date-to">Do daty:</label>
-      <input type="date" id="date-to">
-      
-      <button id="filter-button">Filtruj</button>
-    </div>
-    
-    <div>
-      <h3>Łączny czas dla tablicy:</h3>
-      <p id="board-total-time">Ładowanie...</p>
-      
-      <h3>Raporty czasu według list:</h3>
-      <div id="list-time-reports">Ładowanie...</div>
-      
-      <h3>Raporty czasu według kart:</h3>
-      <div id="card-time-reports">Ładowanie...</div>
-      
-      <button id="export-board-button">Eksportuj do CSV</button>
-      <button id="close-button">Zamknij</button>
-    </div>
+<div>
+  <h2>Raport czasu dla całej tablicy</h2>
+
+  <div class="filter-section">
+    <label for="date-from">Od daty:</label>
+    <input type="date" id="date-from">
+
+    <label for="date-to">Do daty:</label>
+    <input type="date" id="date-to">
+
+    <button id="filter-button">Filtruj</button>
   </div>
+
+  <div class="report-section">
+    <h3>Łączny czas dla tablicy:</h3>
+    <p id="board-total-time">Ładowanie...</p>
+  </div>
+
+  <div class="report-section">
+    <h3>Raporty czasu według list:</h3>
+    <div id="list-time-reports">Ładowanie...</div>
+  </div>
+
+  <div class="report-section">
+    <h3>Raporty czasu według użytkowników:</h3>
+    <div id="user-time-reports">Ładowanie...</div>
+  </div>
+
+  <div class="report-section">
+    <h3>Raporty czasu według kart:</h3>
+    <div id="card-time-reports">Ładowanie...</div>
+  </div>
+
+  <div class="button-section">
+    <button id="export-board-button">Eksportuj do CSV</button>
+    <button id="close-button">Zamknij</button>
+  </div>
+</div>
 </body>
 </html>
