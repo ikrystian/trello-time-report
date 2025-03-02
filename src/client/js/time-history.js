@@ -33,17 +33,25 @@ function calculateTotalTime(timeEntries) {
     }, 0);
 }
 
+// Function to delete a time entry
+function deleteTimeEntry(entries, entryIndex) {
+    entries.splice(entryIndex, 1);
+    return t.set('card', 'shared', TIME_ENTRIES_KEY, entries);
+}
+
 // Funkcja inicjalizująca widok historii
 document.addEventListener('DOMContentLoaded', function() {
     // Pobranie danych z karty
     Promise.all([
         t.get('card', 'shared', TIME_ENTRIES_KEY),
         t.get('card', 'shared', ESTIMATED_TIME_KEY),
-        t.card('name')
+        t.card('name'),
+        t.member('id', 'fullName')
     ])
-        .then(function([timeEntries, estimatedTime, card]) {
+        .then(function([timeEntries, estimatedTime, card, member]) {
             const entries = timeEntries || [];
             const cardName = card.name;
+            const currentMemberId = member.id;
 
             // Wyświetlenie szacunkowego czasu
             const estimatedTimeDisplay = document.getElementById('estimated-time-display');
@@ -96,20 +104,43 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Sortowanie wpisów chronologicznie - od najnowszych
                 entries.sort((a, b) => new Date(b.date) - new Date(a.date));
 
-                const entriesHtml = entries.map(entry => {
+                const entriesHtml = entries.map((entry, index) => {
                     const username = entry.username || 'Nieznany użytkownik';
+                    const isCurrentUser = entry.memberId === currentMemberId;
+                    const deleteButton = isCurrentUser ? 
+                        `<button class="delete-entry-button" data-entry-index="${index}">Usuń</button>` : '';
+                    
                     return `
-            <div class="time-entry">
-              <p><strong>Data:</strong> ${formatDate(entry.date)}</p>
-              <p><strong>Czas:</strong> ${formatTime(entry.hours * 60 + entry.minutes)}</p>
-              <p><strong>Użytkownik:</strong> ${username}</p>
-              <p><strong>Opis:</strong> ${entry.description || 'Brak opisu'}</p>
-              <hr>
-            </div>
-          `;
+                        <div class="time-entry">
+                            <p><strong>Data:</strong> ${formatDate(entry.date)}</p>
+                            <p><strong>Czas:</strong> ${formatTime(entry.hours * 60 + entry.minutes)}</p>
+                            <p><strong>Użytkownik:</strong> ${username}</p>
+                            <p><strong>Opis:</strong> ${entry.description || 'Brak opisu'}</p>
+                            ${deleteButton}
+                            <hr>
+                        </div>
+                    `;
                 }).join('');
 
                 entriesList.innerHTML = entriesHtml;
+
+                // Add event listeners to delete buttons
+                document.querySelectorAll('.delete-entry-button').forEach(button => {
+                    button.addEventListener('click', function() {
+                        if (confirm('Czy na pewno chcesz usunąć ten wpis czasu?')) {
+                            const entryIndex = parseInt(this.getAttribute('data-entry-index'), 10);
+                            deleteTimeEntry(entries, entryIndex)
+                                .then(() => {
+                                    // Refresh the page to show updated entries
+                                    window.location.reload();
+                                })
+                                .catch(error => {
+                                    console.error('Error deleting time entry:', error);
+                                    alert('Wystąpił błąd podczas usuwania wpisu.');
+                                });
+                        }
+                    });
+                });
             }
 
             // Eksport do CSV

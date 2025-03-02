@@ -25,29 +25,27 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         // Pobranie danych zalogowanego użytkownika
-        t.member('fullName')
-            .then(function(member) {
-                const username = member ? member.fullName : 'Nieznany użytkownik';
+        Promise.all([
+            t.member('id', 'fullName'),
+            t.get('card', 'shared', TIME_ENTRIES_KEY)
+        ])
+            .then(function([member, timeEntries]) {
+                const currentEntries = timeEntries || [];
 
-                // Pobranie istniejących wpisów czasu
-                return t.get('card', 'shared', TIME_ENTRIES_KEY)
-                    .then(function(timeEntries) {
-                        const currentEntries = timeEntries || [];
+                // Dodanie nowego wpisu
+                const newEntry = {
+                    date: new Date().toISOString(),
+                    hours: hours,
+                    minutes: minutes,
+                    description: description,
+                    username: member.fullName,
+                    memberId: member.id // Add member ID for entry ownership
+                };
 
-                        // Dodanie nowego wpisu
-                        const newEntry = {
-                            date: new Date().toISOString(),
-                            hours: hours,
-                            minutes: minutes,
-                            description: description,
-                            username: username
-                        };
+                currentEntries.push(newEntry);
 
-                        currentEntries.push(newEntry);
-
-                        // Zapisanie zaktualizowanych wpisów
-                        return t.set('card', 'shared', TIME_ENTRIES_KEY, currentEntries);
-                    });
+                // Zapisanie zaktualizowanych wpisów
+                return t.set('card', 'shared', TIME_ENTRIES_KEY, currentEntries);
             })
             .then(function() {
                 t.closeModal();
