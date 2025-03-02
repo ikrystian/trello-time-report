@@ -155,6 +155,65 @@ document.addEventListener('DOMContentLoaded', function() {
         });
   }
 
+  // New function to get all boards data
+  function generateAllBoardsReport(fromDate, toDate) {
+    t.getAll()
+      .then(function(pluginData) {
+          const allBoardsData = [];
+          let totalBoardsTime = 0;
+          
+          Object.entries(pluginData).forEach(([key, data]) => {
+              if (data && data.shared && data.shared[TIME_ENTRIES_KEY]) {
+                  const timeEntries = data.shared[TIME_ENTRIES_KEY];
+                  const filteredEntries = timeEntries.filter(entry => {
+                      if (!fromDate || !toDate) return true;
+                      const entryDate = new Date(entry.date);
+                      return entryDate >= fromDate && entryDate <= toDate;
+                  });
+
+                  const boardTime = filteredEntries.reduce((total, entry) => {
+                      return total + (entry.hours * 60 + entry.minutes);
+                  }, 0);
+
+                  if (boardTime > 0) {
+                      totalBoardsTime += boardTime;
+                      allBoardsData.push({
+                          boardId: key.split(':')[0],
+                          totalTime: boardTime,
+                          entries: filteredEntries
+                      });
+                  }
+              }
+          });
+
+          // Display total time for all boards
+          document.getElementById('all-boards-total-time').textContent = 
+              `Łączny czas dla wszystkich tablic: ${formatTime(totalBoardsTime)}`;
+
+          // Generate report per board
+          const boardsReportHtml = allBoardsData
+              .sort((a, b) => b.totalTime - a.totalTime)
+              .map(boardData => {
+                  return `
+                      <div>
+                          <p><strong>Tablica ${boardData.boardId}:</strong> ${formatTime(boardData.totalTime)}</p>
+                      </div>
+                  `;
+              })
+              .join('');
+
+          document.getElementById('all-boards-reports').innerHTML = 
+              boardsReportHtml || 'Brak danych o czasie dla tablic';
+      })
+      .catch(function(error) {
+          console.error('Error getting all boards data:', error);
+          document.getElementById('all-boards-total-time').textContent = 
+              'Wystąpił błąd podczas pobierania danych';
+          document.getElementById('all-boards-reports').innerHTML = 
+              'Wystąpił błąd podczas pobierania danych';
+      });
+  }
+
   // Obsługa filtrowania
   document.getElementById('filter-button').addEventListener('click', function() {
     const fromDate = document.getElementById('date-from').valueAsDate;
@@ -166,6 +225,18 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     generateReport(fromDate, toDate);
+  });
+
+  // Add event listener for the new button
+  document.getElementById('get-all-boards-button').addEventListener('click', function() {
+    const fromDate = document.getElementById('date-from').valueAsDate;
+    const toDate = document.getElementById('date-to').valueAsDate;
+
+    if (toDate) {
+        toDate.setHours(23, 59, 59, 999);
+    }
+
+    generateAllBoardsReport(fromDate, toDate);
   });
 
   // Obsługa eksportu do CSV
