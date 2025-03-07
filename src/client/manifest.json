@@ -12,7 +12,9 @@
     "card-buttons",
     "board-buttons",
     "card-back-section",
-    "show-settings"
+    "show-settings",
+    "list-actions",
+    "list-header"
   ],
   "connectors": {
     "iframe": {

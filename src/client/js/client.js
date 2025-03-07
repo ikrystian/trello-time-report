@@ -36,8 +36,73 @@ function calculateTotalTime(timeEntries) {
     }, 0);
 }
 
+// Funkcja do obliczania łącznego czasu dla listy
+function calculateListTotalTime(t, listId) {
+    return Promise.all([
+        t.cards('id', 'name', 'idList'),
+        t.lists('id', 'name')
+    ])
+    .then(function([cards, lists]) {
+        // Filtrowanie kart dla danej listy
+        const listCards = cards.filter(card => card.idList === listId);
+        
+        // Pobranie danych o czasie dla wszystkich kart w liście
+        const cardPromises = listCards.map(card => {
+            return t.get(card.id, 'shared', TIME_ENTRIES_KEY)
+                .then(timeEntries => {
+                    return {
+                        card: card,
+                        timeEntries: timeEntries || [],
+                        totalMinutes: calculateTotalTime(timeEntries || [])
+                    };
+                });
+        });
+
+        return Promise.all(cardPromises);
+    })
+    .then(function(cardsWithTime) {
+        // Obliczenie łącznego czasu dla listy
+        let listTotalMinutes = 0;
+        cardsWithTime.forEach(cardData => {
+            listTotalMinutes += cardData.totalMinutes;
+        });
+
+        return listTotalMinutes;
+    });
+}
+
 // Główna logika Power-Up
 TrelloPowerUp.initialize({
+    // Nagłówek listy
+    'list-header': function(t) {
+        return {
+            title: 'Podsumowanie czasu',
+            icon: 'https://img.icons8.com/ios-filled/50/000000/clock--v1.png',
+            url: './list-header.html',
+            height: 30
+        };
+    },
+    
+    // Przyciski na listach
+    'list-actions': function(t) {
+        return t.list('id')
+            .then(function(list) {
+                return calculateListTotalTime(t, list.id)
+                    .then(function(totalMinutes) {
+                        return [{
+                            text: `Czas listy: ${formatTime(totalMinutes)}`,
+                            callback: function(t) {
+                                return t.modal({
+                                    title: 'Podsumowanie czasu dla listy',
+                                    url: './list-summary.html',
+                                    height: 500
+                                });
+                            }
+                        }];
+                    });
+            });
+    },
+    
     // Przyciski na tablicy
     'board-buttons': function (t) {
         return [{

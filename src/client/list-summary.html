@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Podsumowanie czasu dla listy</title>
+  <script src="https://p.trellocdn.com/power-up.min.js"></script>
+  <link rel="stylesheet" href="https://p.trellocdn.com/power-up.css">
+  <link rel="stylesheet" href="./styles.css">
+  <script src="./js/list-summary.js"></script>
+  <style>
+    .summary-container {
+      padding: 10px;
+      max-width: 500px;
+      margin: 0 auto;
+    }
+    .summary-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    .summary-title {
+      font-size: 18px;
+      font-weight: bold;
+    }
+    .total-time {
+      font-size: 16px;
+      font-weight: bold;
+      color: #0079BF;
+      margin-bottom: 15px;
+    }
+    .card-item {
+      padding: 10px;
+      border-radius: 3px;
+      margin-bottom: 10px;
+      background-color: #f7f7f7;
+    }
+    .card-name {
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+    .card-time {
+      color: #5e6c84;
+    }
+    .no-time {
+      color: #5e6c84;
+      font-style: italic;
+    }
+    .actions {
+      margin-top: 20px;
+      text-align: right;
+    }
+  </style>
+</head>
+<body>
+  <div id="container" class="summary-container">
+    <div class="summary-header">
+      <div class="summary-title">Podsumowanie czasu dla listy: <span id="list-name"></span></div>
+    </div>
+    
+    <div class="total-time">Łączny czas: <span id="total-time"></span></div>
+    
+    <div id="cards-container">
+      <h3>Karty w tej liście:</h3>
+      <div id="cards-list"></div>
+    </div>
+    
+    <div class="actions">
+      <button id="close-button" class="mod-primary">Zamknij</button>
+    </div>
+  </div>
+</body>
+</html>
