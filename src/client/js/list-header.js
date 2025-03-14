@@ -2,6 +2,7 @@
 
 var t = TrelloPowerUp.iframe();
 const TIME_ENTRIES_KEY = 'timeEntries';
+const ESTIMATED_TIME_KEY = 'estimatedTime';
 
 // Funkcja do formatowania czasu
 function formatTime(totalMinutes) {
@@ -42,7 +43,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const listCards = cards.filter(card => card.idList === list.id);
             
             // Pobranie danych o czasie dla wszystkich kart w liście
-            const cardPromises = listCards.map(card => {
+            const timePromises = listCards.map(card => {
                 return t.get(card.id, 'shared', TIME_ENTRIES_KEY)
                     .then(timeEntries => {
                         return {
@@ -53,20 +54,51 @@ document.addEventListener('DOMContentLoaded', function() {
                     });
             });
 
-            return Promise.all(cardPromises);
+            // Pobranie danych o szacowanym czasie dla wszystkich kart w liście
+            const estimatedPromises = listCards.map(card => {
+                return t.get(card.id, 'shared', ESTIMATED_TIME_KEY)
+                    .then(estimatedTime => {
+                        return {
+                            card: card,
+                            estimatedTime: estimatedTime || 0
+                        };
+                    });
+            });
+
+            return Promise.all([
+                Promise.all(timePromises),
+                Promise.all(estimatedPromises)
+            ]);
         })
-        .then(function(cardsWithTime) {
+        .then(function([cardsWithTime, cardsWithEstimatedTime]) {
             // Obliczenie łącznego czasu dla listy
             let listTotalMinutes = 0;
             cardsWithTime.forEach(cardData => {
                 listTotalMinutes += cardData.totalMinutes;
             });
 
+            // Obliczenie łącznego szacowanego czasu dla listy
+            let listEstimatedMinutes = 0;
+            cardsWithEstimatedTime.forEach(cardData => {
+                listEstimatedMinutes += cardData.estimatedTime;
+            });
+
             // Wyświetlenie łącznego czasu
             document.getElementById('list-time').textContent = `Łączny czas: ${formatTime(listTotalMinutes)}`;
             
+            // Wyświetlenie szacowanego czasu
+            document.getElementById('estimated-time').textContent = `Szacowany czas: ${formatTime(listEstimatedMinutes)}`;
+            
             // Dodanie obsługi kliknięcia, aby otworzyć modal z szczegółami
             document.getElementById('list-time').addEventListener('click', function() {
+                t.modal({
+                    title: 'Podsumowanie czasu dla listy',
+                    url: './list-summary.html',
+                    height: 500
+                });
+            });
+
+            document.getElementById('estimated-time').addEventListener('click', function() {
                 t.modal({
                     title: 'Podsumowanie czasu dla listy',
                     url: './list-summary.html',

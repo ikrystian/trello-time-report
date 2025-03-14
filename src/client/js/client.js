@@ -71,6 +71,39 @@ function calculateListTotalTime(t, listId) {
     });
 }
 
+// Funkcja do obliczania łącznego szacowanego czasu dla listy
+function calculateListEstimatedTime(t, listId) {
+    return Promise.all([
+        t.cards('id', 'name', 'idList')
+    ])
+    .then(function([cards]) {
+        // Filtrowanie kart dla danej listy
+        const listCards = cards.filter(card => card.idList === listId);
+        
+        // Pobranie danych o szacowanym czasie dla wszystkich kart w liście
+        const cardPromises = listCards.map(card => {
+            return t.get(card.id, 'shared', ESTIMATED_TIME_KEY)
+                .then(estimatedTime => {
+                    return {
+                        card: card,
+                        estimatedTime: estimatedTime || 0
+                    };
+                });
+        });
+
+        return Promise.all(cardPromises);
+    })
+    .then(function(cardsWithEstimatedTime) {
+        // Obliczenie łącznego szacowanego czasu dla listy
+        let listEstimatedMinutes = 0;
+        cardsWithEstimatedTime.forEach(cardData => {
+            listEstimatedMinutes += cardData.estimatedTime;
+        });
+
+        return listEstimatedMinutes;
+    });
+}
+
 // Główna logika Power-Up
 TrelloPowerUp.initialize({
     // Nagłówek listy
@@ -87,19 +120,32 @@ TrelloPowerUp.initialize({
     'list-actions': function(t) {
         return t.list('id')
             .then(function(list) {
-                return calculateListTotalTime(t, list.id)
-                    .then(function(totalMinutes) {
-                        return [{
-                            text: `Czas listy: ${formatTime(totalMinutes)}`,
-                            callback: function(t) {
-                                return t.modal({
-                                    title: 'Podsumowanie czasu dla listy',
-                                    url: './list-summary.html',
-                                    height: 500
-                                });
-                            }
-                        }];
-                    });
+                return Promise.all([
+                    calculateListTotalTime(t, list.id),
+                    calculateListEstimatedTime(t, list.id)
+                ])
+                .then(function([totalMinutes, estimatedMinutes]) {
+                    return [{
+                        text: `Czas listy: ${formatTime(totalMinutes)}`,
+                        callback: function(t) {
+                            return t.modal({
+                                title: 'Podsumowanie czasu dla listy',
+                                url: './list-summary.html',
+                                height: 500
+                            });
+                        }
+                    },
+                    {
+                        text: `Szacowany czas: ${formatTime(estimatedMinutes)}`,
+                        callback: function(t) {
+                            return t.modal({
+                                title: 'Podsumowanie czasu dla listy',
+                                url: './list-summary.html',
+                                height: 500
+                            });
+                        }
+                    }];
+                });
             });
     },
     

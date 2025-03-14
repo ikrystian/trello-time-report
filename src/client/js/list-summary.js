@@ -2,6 +2,7 @@
 
 var t = TrelloPowerUp.iframe();
 const TIME_ENTRIES_KEY = 'timeEntries';
+const ESTIMATED_TIME_KEY = 'estimatedTime';
 
 // Funkcja do formatowania czasu
 function formatTime(totalMinutes) {
@@ -38,44 +39,54 @@ document.addEventListener('DOMContentLoaded', function() {
             return t.cards('id', 'name');
         })
         .then(function(cards) {
-            // Pobranie danych o czasie dla wszystkich kart
+            // Pobranie danych o czasie i szacowanym czasie dla wszystkich kart
             const cardPromises = cards.map(card => {
-                return t.get(card.id, 'shared', TIME_ENTRIES_KEY)
-                    .then(timeEntries => {
-                        return {
-                            card: card,
-                            timeEntries: timeEntries || [],
-                            totalMinutes: calculateTotalTime(timeEntries || [])
-                        };
-                    });
+                return Promise.all([
+                    t.get(card.id, 'shared', TIME_ENTRIES_KEY),
+                    t.get(card.id, 'shared', ESTIMATED_TIME_KEY)
+                ]).then(([timeEntries, estimatedTime]) => {
+                    return {
+                        card: card,
+                        timeEntries: timeEntries || [],
+                        totalMinutes: calculateTotalTime(timeEntries || []),
+                        estimatedTime: estimatedTime || 0
+                    };
+                });
             });
 
             return Promise.all(cardPromises);
         })
-        .then(function(cardsWithTime) {
+        .then(function(cardsWithData) {
             // Obliczenie łącznego czasu dla listy
             let listTotalMinutes = 0;
-            cardsWithTime.forEach(cardData => {
+            let listEstimatedMinutes = 0;
+            
+            cardsWithData.forEach(cardData => {
                 listTotalMinutes += cardData.totalMinutes;
+                listEstimatedMinutes += cardData.estimatedTime;
             });
 
             // Wyświetlenie łącznego czasu
             document.getElementById('total-time').textContent = formatTime(listTotalMinutes);
+            
+            // Wyświetlenie łącznego szacowanego czasu
+            document.getElementById('estimated-time').textContent = formatTime(listEstimatedMinutes);
 
             // Sortowanie kart według czasu (od największego)
-            cardsWithTime.sort((a, b) => b.totalMinutes - a.totalMinutes);
+            cardsWithData.sort((a, b) => b.totalMinutes - a.totalMinutes);
 
             // Wyświetlenie kart
             const cardsListElement = document.getElementById('cards-list');
             
-            if (cardsWithTime.length === 0) {
+            if (cardsWithData.length === 0) {
                 cardsListElement.innerHTML = '<div class="no-time">Brak kart w tej liście</div>';
             } else {
-                const cardsHtml = cardsWithTime.map(cardData => {
+                const cardsHtml = cardsWithData.map(cardData => {
                     return `
                         <div class="card-item">
                             <div class="card-name">${cardData.card.name}</div>
                             <div class="card-time">Czas: ${formatTime(cardData.totalMinutes)}</div>
+                            ${cardData.estimatedTime > 0 ? `<div class="card-estimated-time">Szacowany: ${formatTime(cardData.estimatedTime)}</div>` : ''}
                         </div>
                     `;
                 }).join('');
