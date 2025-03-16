@@ -23,7 +23,8 @@ function formatTime(totalMinutes) {
 
 // Funkcja do obliczania łącznego czasu dla karty
 function calculateTotalTime(timeEntries) {
-  if (!timeEntries || !timeEntries.length) return 0;
+  if (!timeEntries || !Array.isArray(timeEntries) || !timeEntries.length)
+    return 0;
 
   return timeEntries.reduce((total, entry) => {
     return total + (entry.hours * 60 + entry.minutes);
@@ -38,10 +39,12 @@ function calculateListTotalTime(t, listId, cards) {
   // Pobranie danych o czasie dla wszystkich kart w liście
   const cardPromises = listCards.map((card) => {
     return t.get(card.id, "shared", TIME_ENTRIES_KEY).then((timeEntries) => {
+      // Upewnij się, że timeEntries jest tablicą
+      const validTimeEntries = Array.isArray(timeEntries) ? timeEntries : [];
       return {
         card: card,
-        timeEntries: timeEntries || [],
-        totalMinutes: calculateTotalTime(timeEntries || []),
+        timeEntries: validTimeEntries,
+        totalMinutes: calculateTotalTime(validTimeEntries),
       };
     });
   });
@@ -67,9 +70,12 @@ function calculateListEstimatedTime(t, listId, cards) {
     return t
       .get(card.id, "shared", ESTIMATED_TIME_KEY)
       .then((estimatedTime) => {
+        // Upewnij się, że estimatedTime jest liczbą
+        const validEstimatedTime =
+          typeof estimatedTime === "number" ? estimatedTime : 0;
         return {
           card: card,
-          estimatedTime: estimatedTime || 0,
+          estimatedTime: validEstimatedTime,
         };
       });
   });
@@ -163,7 +169,38 @@ function loadListsTimeData() {
     });
 }
 
+// Obsługa błędów funkcji
+function handleErrors(fn) {
+  return function (...args) {
+    try {
+      return fn.apply(this, args);
+    } catch (error) {
+      console.error("Złapany błąd:", error);
+      return 0; // Wartość domyślna dla funkcji liczących czas
+    }
+  };
+}
+
+// Zabezpieczenie funkcji obliczających czas
+const safeCalculateTotalTime = handleErrors(calculateTotalTime);
+
+// Zastąpienie oryginalnych funkcji zabezpieczonymi wersjami
+function originalCalculateTotalTime(timeEntries) {
+  return calculateTotalTime(timeEntries);
+}
+calculateTotalTime = safeCalculateTotalTime;
+
 // Inicjalizacja po załadowaniu strony
 t.render(function () {
-  loadListsTimeData();
+  try {
+    loadListsTimeData();
+  } catch (error) {
+    console.error("Błąd podczas inicjalizacji:", error);
+
+    const container = document.getElementById("lists-time-container");
+    if (container) {
+      container.innerHTML =
+        '<div class="error">Wystąpił błąd podczas ładowania danych. Spróbuj odświeżyć stronę.</div>';
+    }
+  }
 });
