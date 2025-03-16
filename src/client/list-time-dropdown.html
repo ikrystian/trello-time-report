@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <link rel="stylesheet" href="https://p.trellocdn.com/power-up.min.css">
+  <script src="https://p.trellocdn.com/power-up.min.js"></script>
+  <style>
+    .time-list-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 10px;
+      border-bottom: 1px solid #eee;
+    }
+    .time-list-item:last-child {
+      border-bottom: none;
+    }
+    .list-name {
+      font-weight: bold;
+      margin-right: 10px;
+      flex: 1;
+    }
+    .times-container {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+    }
+    .time-value {
+      white-space: nowrap;
+      margin: 2px 0;
+    }
+    .time-label {
+      color: #666;
+      font-size: 0.9em;
+      margin-right: 4px;
+    }
+    .dropdown-container {
+      max-height: 300px;
+      overflow-y: auto;
+    }
+  </style>
+</head>
+<body>
+  <div class="dropdown-container" id="lists-time-container">
+    <div class="loading">Ładowanie danych...</div>
+  </div>
+  <script src="./js/list-time-dropdown.js"></script>
+</body>
+</html>
