@@ -4,7 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Trello Time Report Panel</title>
-    <link rel="stylesheet" href="admin.css"> <!-- We'll create this next -->
+    <!-- daterangepicker dependencies -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/jquery/latest/jquery.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
+    <!-- App CSS -->
+    <link rel="stylesheet" href="admin.css">
 </head>
 <body>
     <h1>Trello Time Report Panel</h1>
@@ -18,11 +24,9 @@
         <!-- Add filter controls later -->
         <div class="filters" style="margin-top: 15px; display: none;">
              <h2>Filters</h2>
-             <!-- Example: Date Range -->
-             <label for="start-date">Start Date:</label>
-             <input type="date" id="start-date">
-             <label for="end-date">End Date:</label>
-             <input type="date" id="end-date">
+             <!-- Date Range Picker Input -->
+             <label for="date-range-picker">Date Range:</label>
+             <input type="text" id="date-range-picker" placeholder="Select Date Range" style="width: 220px;"/> <!-- Added style for width -->
              <!-- User Filter -->
              <label for="user-select">User:</label>
              <select id="user-select"><option value="">All Users</option></select>
@@ -50,6 +54,7 @@
         <div id="loading-indicator" style="display: none;">Loading data...</div>
     </div>
 
-    <script src="js/admin.js"></script> <!-- We'll create this later -->
+    <!-- App JS (after dependencies) -->
+    <script src="js/admin.js"></script>
 </body>
 </html>

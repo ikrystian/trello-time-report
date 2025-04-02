@@ -73,23 +73,31 @@ document.addEventListener("DOMContentLoaded", () => {
     const filtersDiv = document.querySelector(".filters");
     const summaryDiv = document.querySelector(".summary");
     const summaryContent = document.getElementById("summary-content");
-    const startDateInput = document.getElementById("start-date");
-    const endDateInput = document.getElementById("end-date");
+    const dateRangePickerInput = $("#date-range-picker"); // Get jQuery object for picker
     const userSelectElementForValue = document.getElementById("user-select");
     const labelSelectElementForValue = document.getElementById("label-select"); // Get label select
 
+    // Check if essential elements exist
     if (
       !timeEntriesContainer ||
       !loadingIndicator ||
       !filtersDiv ||
       !summaryDiv ||
       !summaryContent ||
-      !startDateInput ||
-      !endDateInput
+      !dateRangePickerInput.length || // Check if picker input exists via jQuery length
+      !userSelectElementForValue ||
+      !labelSelectElementForValue
     ) {
       console.error(
         "Error fetching time data: One or more display/filter elements are missing."
       );
+      // Optionally provide more specific feedback to the user or log which element is missing
+      if (!dateRangePickerInput.length)
+        console.error("Date Range Picker input not found.");
+      if (!userSelectElementForValue)
+        console.error("User select input not found.");
+      if (!labelSelectElementForValue)
+        console.error("Label select input not found.");
       return;
     }
 
@@ -109,8 +117,18 @@ document.addEventListener("DOMContentLoaded", () => {
     if (summaryDiv) summaryDiv.style.display = "none";
     if (summaryContent) summaryContent.innerHTML = "";
 
-    const startDate = startDateInput.value;
-    const endDate = endDateInput.value;
+    // Get dates from daterangepicker instance
+    const pickerData = dateRangePickerInput.data("daterangepicker");
+    // Ensure pickerData exists and has valid dates before formatting
+    const startDate =
+      pickerData && pickerData.startDate && pickerData.startDate.isValid()
+        ? pickerData.startDate.format("YYYY-MM-DD")
+        : null;
+    const endDate =
+      pickerData && pickerData.endDate && pickerData.endDate.isValid()
+        ? pickerData.endDate.format("YYYY-MM-DD")
+        : null;
+
     const selectedUserId = userSelectElementForValue
       ? userSelectElementForValue.value
       : null;
@@ -119,6 +137,7 @@ document.addEventListener("DOMContentLoaded", () => {
       : null;
 
     const queryParams = new URLSearchParams();
+    // Only add date params if they are valid
     if (startDate) queryParams.append("startDate", startDate);
     if (endDate) queryParams.append("endDate", endDate);
     if (selectedUserId) queryParams.append("userId", selectedUserId);
@@ -408,6 +427,60 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  // --- Initialize Date Range Picker (using jQuery) ---
+  // Check if jQuery and daterangepicker are loaded
+  if (typeof $ !== "undefined" && typeof $.fn.daterangepicker !== "undefined") {
+    $("#date-range-picker").daterangepicker({
+      opens: "left", // Or 'right'
+      autoUpdateInput: false, // Don't auto-update input initially
+      locale: {
+        format: "YYYY-MM-DD",
+        cancelLabel: "Clear",
+        applyLabel: "Apply",
+      },
+      ranges: {
+        // Optional predefined ranges
+        Today: [moment(), moment()],
+        Yesterday: [moment().subtract(1, "days"), moment().subtract(1, "days")],
+        "Last 7 Days": [moment().subtract(6, "days"), moment()],
+        "Last 30 Days": [moment().subtract(29, "days"), moment()],
+        "This Month": [moment().startOf("month"), moment().endOf("month")],
+        "Last Month": [
+          moment().subtract(1, "month").startOf("month"),
+          moment().subtract(1, "month").endOf("month"),
+        ],
+      },
+    });
+
+    // Handle selection and clearing
+    $("#date-range-picker").on("apply.daterangepicker", function (ev, picker) {
+      $(this).val(
+        picker.startDate.format("YYYY-MM-DD") +
+          " - " +
+          picker.endDate.format("YYYY-MM-DD")
+      );
+    });
+
+    $("#date-range-picker").on("cancel.daterangepicker", function (ev, picker) {
+      $(this).val(""); // Clear the input
+      // Optionally trigger filter update here if needed immediately on clear
+      // const selectedBoardId = document.getElementById("board-select").value;
+      // if (selectedBoardId) fetchTimeData(selectedBoardId);
+    });
+
+    // Set initial value to empty
+    $("#date-range-picker").val("");
+  } else {
+    console.error(
+      "jQuery or daterangepicker library not loaded. Date range picker will not function."
+    );
+    const dateRangeInput = document.getElementById("date-range-picker");
+    if (dateRangeInput) {
+      dateRangeInput.placeholder = "Date picker failed to load";
+      dateRangeInput.disabled = true;
+    }
+  }
+
   // --- Event Listeners ---
   boardSelect.addEventListener("change", (event) => {
     try {
@@ -423,6 +496,19 @@ document.addEventListener("DOMContentLoaded", () => {
         console.error(
           "Could not find timeEntriesContainerElement in change listener."
         );
+      }
+      // Clear date picker when board changes
+      if (
+        typeof $ !== "undefined" &&
+        typeof $.fn.daterangepicker !== "undefined"
+      ) {
+        $("#date-range-picker").val("");
+        // Reset the picker's internal dates if necessary (might not be needed depending on desired behavior)
+        // const picker = $('#date-range-picker').data('daterangepicker');
+        // if (picker) {
+        //     picker.setStartDate(moment()); // Or some default
+        //     picker.setEndDate(moment());   // Or some default
+        // }
       }
       fetchTimeData(selectedBoardId);
     } catch (error) {
