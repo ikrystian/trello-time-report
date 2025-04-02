@@ -1,0 +1,76 @@
+body {
+  font-family: sans-serif;
+  margin: 20px;
+  background-color: #f4f5f7;
+  color: #172b4d;
+}
+
+h1,
+h2 {
+  color: #0052cc;
+}
+
+.controls,
+.filters,
+.summary,
+.data-display {
+  background-color: #ffffff;
+  padding: 15px;
+  border-radius: 3px;
+  box-shadow: 0 1px 1px rgba(9, 30, 66, 0.25);
+  margin-bottom: 20px;
+}
+
+label {
+  margin-right: 5px;
+  font-weight: bold;
+}
+
+select,
+input[type="date"],
+button {
+  padding: 8px 12px;
+  border: 1px solid #dfe1e6;
+  border-radius: 3px;
+  margin-right: 10px;
+  font-size: 14px;
+}
+
+button {
+  background-color: #0079bf;
+  color: white;
+  cursor: pointer;
+  border: none;
+}
+
+button:hover {
+  background-color: #026aa7;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 15px;
+}
+
+th,
+td {
+  border: 1px solid #dfe1e6;
+  padding: 10px;
+  text-align: left;
+}
+
+th {
+  background-color: #ebecf0;
+  font-weight: bold;
+}
+
+tbody tr:nth-child(odd) {
+  background-color: #f4f5f7;
+}
+
+#loading-indicator {
+  margin-top: 10px;
+  font-style: italic;
+  color: #5e6c84;
+}

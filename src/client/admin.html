@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trello Time Report Panel</title>
+    <link rel="stylesheet" href="admin.css"> <!-- We'll create this next -->
+</head>
+<body>
+    <h1>Trello Time Report Panel</h1>
+
+    <div class="controls">
+        <label for="board-select">Select Board:</label>
+        <select id="board-select" name="board">
+            <option value="">Loading boards...</option>
+        </select>
+
+        <!-- Add filter controls later -->
+        <div class="filters" style="margin-top: 15px; display: none;">
+             <h2>Filters</h2>
+             <!-- Example: Date Range -->
+             <label for="start-date">Start Date:</label>
+             <input type="date" id="start-date">
+             <label for="end-date">End Date:</label>
+             <input type="date" id="end-date">
+             <!-- User Filter -->
+             <label for="user-select">User:</label>
+             <select id="user-select"><option value="">All Users</option></select>
+             <button id="apply-filters">Apply Filters</button>
+             <button id="export-csv" style="margin-left: 10px;">Export to CSV</button> <!-- Add Export Button -->
+        </div>
+    </div>
+
+    <div class="summary" style="margin-top: 20px; display: none;">
+        <h2>Summary</h2>
+        <div id="summary-content">
+            <!-- Summary data will be populated here -->
+        </div>
+    </div>
+
+    <div class="data-display" style="margin-top: 20px;">
+        <h2>Time Entries</h2>
+        <table id="time-entries-table">
+            <thead>
+                <tr>
+                    <th>Card Name</th>
+                    <th>List Name</th> <!-- Requires fetching list names -->
+                    <th>User</th> <!-- Requires fetching member names -->
+                    <th>Date</th>
+                    <th>Hours</th>
+                    <th>Comment</th> <!-- Assuming comment is part of time entry -->
+                </tr>
+            </thead>
+            <tbody id="time-entries-body">
+                <!-- Time entry rows will be populated here -->
+                <tr><td colspan="6">Select a board to view time entries.</td></tr>
+            </tbody>
+        </table>
+        <div id="loading-indicator" style="display: none;">Loading data...</div>
+    </div>
+
+    <script src="js/admin.js"></script> <!-- We'll create this later -->
+</body>
+</html>
