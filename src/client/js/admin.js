@@ -108,19 +108,21 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (loadingIndicator) loadingIndicator.style.display = "block";
     if (timeEntriesContainer) timeEntriesContainer.innerHTML = ""; // Clear existing content before fetch
-    if (filtersDiv) filtersDiv.style.display = "block";
+    if (filtersDiv) filtersDiv.style.display = "flex";
     if (summaryDiv) summaryDiv.style.display = "none";
     if (summaryContent) summaryContent.innerHTML = "";
     // No need to clear charts
 
     // Get dates from daterangepicker instance
     const pickerData = dateRangePickerInput.data("daterangepicker");
+
     const startDate = pickerData?.startDate?.isValid()
       ? pickerData.startDate.format("YYYY-MM-DD")
       : null;
     const endDate = pickerData?.endDate?.isValid()
       ? pickerData.endDate.format("YYYY-MM-DD")
       : null;
+
     const selectedUserId = userSelectElementForValue?.value;
     const selectedLabelId = labelSelectElementForValue?.value;
 
@@ -131,6 +133,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (selectedLabelId) queryParams.append("labelId", selectedLabelId);
 
     const queryString = queryParams.toString();
+    console.log(queryString);
     const apiUrl = `/api/boards/${boardId}/time-data${
       queryString ? `?${queryString}` : ""
     }`;
@@ -223,45 +226,48 @@ document.addEventListener("DOMContentLoaded", () => {
       listGroup.cards.sort((a, b) => a.cardName.localeCompare(b.cardName));
 
       listGroup.cards.forEach((card) => {
-        const cardDetails = document.createElement("details");
-        cardDetails.classList.add("card-group-details");
-        cardDetails.open = card.timeEntries.length > 0;
+        // Only render the card if it has reported hours
+        if (card.totalReportedHours > 0) {
+          const cardDetails = document.createElement("details");
+          cardDetails.classList.add("card-group-details");
+          // Default to open since we are only showing cards with time entries
+          cardDetails.open = true;
 
-        const cardSummary = document.createElement("summary");
-        cardSummary.innerHTML = `<span class="card-name">${
-          card.cardName
-        }</span> <a href="${
-          card.cardUrl
-        }" target="_blank" class="card-trello-link" title="Open card in Trello">🔗</a> <span class="card-hours">(Est: ${formatHours(
-          card.estimatedHours || 0
-        )}h / Rep: ${formatHours(card.totalReportedHours)}h)</span>`;
-        cardDetails.appendChild(cardSummary);
+          const cardSummary = document.createElement("summary");
+          cardSummary.innerHTML = `<span class="card-name">${
+            card.cardName
+          }</span> <a href="${
+            card.cardUrl
+          }" target="_blank" class="card-trello-link" title="Open card in Trello">🔗</a> <span class="card-hours">(Est: ${formatHours(
+            card.estimatedHours || 0
+          )}h / Rep: ${formatHours(card.totalReportedHours)}h)</span>`;
+          cardDetails.appendChild(cardSummary);
 
-        const entriesDiv = document.createElement("div");
-        entriesDiv.classList.add("card-entries-list");
+          const entriesDiv = document.createElement("div");
+          entriesDiv.classList.add("card-entries-list");
 
-        const estimatedTimeDiv = document.createElement("div");
-        estimatedTimeDiv.classList.add("entry-item", "entry-estimated");
-        estimatedTimeDiv.innerHTML = `<span style="font-weight: bold;">Total Estimated:</span> <span></span> <span style="font-weight: bold;">${formatHours(
-          card.estimatedHours || 0
-        )}h</span> <span></span>`;
-        entriesDiv.appendChild(estimatedTimeDiv);
+          const estimatedTimeDiv = document.createElement("div");
+          estimatedTimeDiv.classList.add("entry-item", "entry-estimated");
+          estimatedTimeDiv.innerHTML = `<span style="font-weight: bold;">Total Estimated:</span> <span></span> <span style="font-weight: bold;">${formatHours(
+            card.estimatedHours || 0
+          )}h</span> <span></span>`;
+          entriesDiv.appendChild(estimatedTimeDiv);
 
-        const reportedTimeDiv = document.createElement("div");
-        reportedTimeDiv.classList.add("entry-item", "entry-reported-total");
-        reportedTimeDiv.innerHTML = `<span style="font-weight: bold;">Total Reported:</span> <span></span> <span style="font-weight: bold;">${formatHours(
-          card.totalReportedHours
-        )}h</span> <span></span>`;
-        entriesDiv.appendChild(reportedTimeDiv);
+          const reportedTimeDiv = document.createElement("div");
+          reportedTimeDiv.classList.add("entry-item", "entry-reported-total");
+          reportedTimeDiv.innerHTML = `<span style="font-weight: bold;">Total Reported:</span> <span></span> <span style="font-weight: bold;">${formatHours(
+            card.totalReportedHours
+          )}h</span> <span></span>`;
+          entriesDiv.appendChild(reportedTimeDiv);
 
-        const headerDiv = document.createElement("div");
-        headerDiv.classList.add("entry-item", "entry-header");
-        headerDiv.innerHTML = `<span>User</span> <span>Date</span> <span>Hours</span> <span>Comment</span>`;
-        entriesDiv.appendChild(headerDiv);
+          const headerDiv = document.createElement("div");
+          headerDiv.classList.add("entry-item", "entry-header");
+          headerDiv.innerHTML = `<span>User</span> <span>Date</span> <span>Hours</span> <span>Comment</span>`;
+          entriesDiv.appendChild(headerDiv);
 
-        card.timeEntries.sort((a, b) => new Date(b.date) - new Date(a.date));
+          // Sort and display entries (we know timeEntries.length > 0 because totalReportedHours > 0)
+          card.timeEntries.sort((a, b) => new Date(b.date) - new Date(a.date));
 
-        if (card.timeEntries.length > 0) {
           card.timeEntries.forEach((entry) => {
             const entryDiv = document.createElement("div");
             entryDiv.classList.add("entry-item");
@@ -276,17 +282,16 @@ document.addEventListener("DOMContentLoaded", () => {
             entryDiv.innerHTML = `<span>${userName}</span> <span>${dateStr}</span> <span>${hoursStr}</span> <span>${commentStr}</span>`;
             entriesDiv.appendChild(entryDiv);
           });
-        } else {
-          const noEntriesDiv = document.createElement("div");
-          noEntriesDiv.classList.add("entry-item", "no-entries");
-          noEntriesDiv.textContent =
-            "No reported time entries for this period.";
-          entriesDiv.appendChild(noEntriesDiv);
-        }
-        cardDetails.appendChild(entriesDiv);
-        cardsContainer.appendChild(cardDetails);
+          // Removed the 'else' block for "No reported time entries" as this card wouldn't be rendered anyway
+
+          cardDetails.appendChild(entriesDiv);
+          cardsContainer.appendChild(cardDetails); // Append card details only if it passed the check
+        } // End if (card.totalReportedHours > 0)
       });
-      timeEntriesContainer.appendChild(listDetails);
+      // Only append the list details if it contains any cards after filtering
+      if (cardsContainer.hasChildNodes()) {
+        timeEntriesContainer.appendChild(listDetails);
+      }
     });
   }
 
@@ -550,6 +555,10 @@ document.addEventListener("DOMContentLoaded", () => {
         // Also reset internal dates of the picker instance
         const picker = $("#date-range-picker").data("daterangepicker");
         if (picker) {
+          // set default value to this month
+          const startOfMonth = moment().startOf("month");
+          const endOfMonth = moment().endOf("month");
+          picker.setStartDate(startOfMonth);
           // Setting to null might cause issues, better to set to a default like today or clear ranges
           // Or simply rely on the 'show' event to set it next time it's opened.
           // Let's just clear the input value for now.

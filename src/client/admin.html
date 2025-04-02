@@ -16,22 +16,31 @@
     <h1>Trello Time Report Panel</h1>
 
     <div class="controls">
-        <label for="board-select">Select Board:</label>
-        <select id="board-select" name="board">
-            <option value="">Loading boards...</option>
-        </select>
+        <div>
+            <label for="board-select">Select Board:</label>
+            <select id="board-select" name="board">
+                <option value="">Loading boards...</option>
+            </select>
+        </div>
 
         <!-- Add filter controls later -->
         <div class="filters" style="display: none;">
              <!-- Date Range Picker Input -->
+              <div>
              <label for="date-range-picker">Date Range:</label>
              <input type="text" id="date-range-picker" placeholder="Select Date Range" style="width: 220px;"/> <!-- Added style for width -->
+            </div>
              <!-- User Filter -->
+              <div>
              <label for="user-select">User:</label>
              <select id="user-select"><option value="">All Users</option></select>
+            </div>
+            <div>
              <!-- Label Filter -->
              <label for="label-select">Label:</label>
              <select id="label-select"><option value="">All Labels</option></select>
+
+            </div>
              <button id="apply-filters">Apply Filters</button>
              <button id="export-csv" style="margin-left: 10px;">Export to CSV</button> <!-- Add Export Button -->
         </div>

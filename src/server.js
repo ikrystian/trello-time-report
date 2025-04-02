@@ -234,11 +234,11 @@ app.get("/api/boards/:boardId/time-data", async (req, res) => {
           timeEntries: timeEntries, // Now contains filtered and mapped entries
         };
       })
-      // Filter based on time entries/estimates AND selected labelId
+      // Filter based on reported time entries AND selected labelId
       .filter((card) => {
-        const hasTimeData =
-          card.timeEntries.length > 0 || card.estimatedHours > 0;
-        if (!hasTimeData) return false; // Must have time data
+        // Only keep cards that have actual time entries reported (after date/user filtering)
+        const hasReportedTime = card.timeEntries.length > 0;
+        if (!hasReportedTime) return false; // Must have reported time entries
 
         // If labelId is provided, check if the card has that label
         if (labelId) {

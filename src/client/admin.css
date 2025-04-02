@@ -10,7 +10,7 @@ h2 {
   color: #0052cc; /* Updated color from original */
 }
 
-.controls, 
+.controls,
 .filters,
 .summary, /* Keep summary styles for now, though it's hidden */
 .data-display {
@@ -21,12 +21,22 @@ h2 {
   margin-bottom: 20px;
 }
 
-.board-select {
+.filters {
   margin-bottom: 0;
+  padding: 0;
+  box-shadow: none; /* Removed shadow for filters */
 }
 
 .controls {
   display: flex;
+  label {
+    margin: 0;
+  }
+
+  label {
+    padding: 0;
+    margin: 0;
+  }
 
   #filters {
     margin-top: 0;
@@ -41,17 +51,6 @@ label {
   font-weight: bold;
   color: #5e6c84; /* Added */
 }
-
-select,
-input[type="date"],
-button {
-  padding: 8px 12px;
-  border: 1px solid #dfe1e6;
-  border-radius: 3px;
-  margin-right: 10px;
-  font-size: 14px;
-}
-
 select {
   min-width: 200px; /* Added */
 }
