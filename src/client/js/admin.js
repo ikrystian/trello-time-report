@@ -20,6 +20,19 @@ document.addEventListener("DOMContentLoaded", () => {
   let currentListMap = {};
   let currentMemberMap = {};
 
+  // Helper function to format hours (e.g., 8.5, 8, not 8.50 or 8.00)
+  function formatHours(hours) {
+    const num = Number(hours) || 0; // Ensure it's a number, default to 0
+    // Check if the number is effectively an integer (accounting for potential floating point inaccuracies)
+    if (Math.abs(num - Math.round(num)) < 0.001) {
+      return num.toString(); // Return as integer string
+    } else {
+      // Round to one decimal place and convert to string
+      // Use parseFloat to remove trailing zeros like .0 if toFixed(1) adds them
+      return parseFloat(num.toFixed(1)).toString();
+    }
+  }
+
   async function fetchBoards() {
     const boardSelectElement = document.getElementById("board-select");
     if (!boardSelectElement) {
@@ -63,6 +76,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const startDateInput = document.getElementById("start-date");
     const endDateInput = document.getElementById("end-date");
     const userSelectElementForValue = document.getElementById("user-select");
+    const labelSelectElementForValue = document.getElementById("label-select"); // Get label select
 
     if (
       !timeEntriesContainer ||
@@ -100,11 +114,15 @@ document.addEventListener("DOMContentLoaded", () => {
     const selectedUserId = userSelectElementForValue
       ? userSelectElementForValue.value
       : null;
+    const selectedLabelId = labelSelectElementForValue // Get selected label ID
+      ? labelSelectElementForValue.value
+      : null;
 
     const queryParams = new URLSearchParams();
     if (startDate) queryParams.append("startDate", startDate);
     if (endDate) queryParams.append("endDate", endDate);
     if (selectedUserId) queryParams.append("userId", selectedUserId);
+    if (selectedLabelId) queryParams.append("labelId", selectedLabelId); // Add labelId to query
 
     const queryString = queryParams.toString();
     const apiUrl = `/api/boards/${boardId}/time-data${
@@ -116,14 +134,17 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      const { timeData, listMap, memberMap } = await response.json();
+      // Destructure boardLabels from response
+      const { timeData, listMap, memberMap, boardLabels } =
+        await response.json();
 
       currentListMap = listMap;
       currentMemberMap = memberMap;
+      // Note: boardLabels are now available here
 
       displayTimeEntries(timeData, currentListMap, currentMemberMap);
-      // Removed setTimeout, call directly
       populateUserFilter(currentMemberMap);
+      populateLabelFilter(boardLabels); // Populate label filter
     } catch (error) {
       console.error(`Error fetching time data for board ${boardId}:`, error);
       if (timeEntriesContainer) {
@@ -183,9 +204,9 @@ document.addEventListener("DOMContentLoaded", () => {
       listSummary.classList.add("list-summary");
       listSummary.innerHTML = `
         <span class="list-name">${listGroup.listName}</span>
-        <span class="list-hours">(Est: ${listGroup.totalEstimatedHours.toFixed(
-          2
-        )}h / Rep: ${listGroup.totalReportedHours.toFixed(2)}h)</span>`;
+        <span class="list-hours">(Est: ${formatHours(
+          listGroup.totalEstimatedHours
+        )}h / Rep: ${formatHours(listGroup.totalReportedHours)}h)</span>`;
       listDetails.appendChild(listSummary);
 
       const cardsContainer = document.createElement("div");
@@ -205,9 +226,9 @@ document.addEventListener("DOMContentLoaded", () => {
           <a href="${
             card.cardUrl
           }" target="_blank" class="card-trello-link" title="Open card in Trello">🔗</a>
-          <span class="card-hours">(Est: ${(card.estimatedHours || 0).toFixed(
-            2
-          )}h / Rep: ${card.totalReportedHours.toFixed(2)}h)</span>`;
+          <span class="card-hours">(Est: ${formatHours(
+            card.estimatedHours || 0
+          )}h / Rep: ${formatHours(card.totalReportedHours)}h)</span>`;
         cardDetails.appendChild(cardSummary);
 
         const entriesDiv = document.createElement("div");
@@ -219,8 +240,8 @@ document.addEventListener("DOMContentLoaded", () => {
         estimatedTimeDiv.innerHTML = `
           <span style="font-weight: bold;">Total Estimated:</span>
           <span></span> <!-- Placeholder for date -->
-          <span style="font-weight: bold;">${(card.estimatedHours || 0).toFixed(
-            2
+          <span style="font-weight: bold;">${formatHours(
+            card.estimatedHours || 0
           )}h</span>
           <span></span> <!-- Placeholder for comment -->
          `;
@@ -233,8 +254,8 @@ document.addEventListener("DOMContentLoaded", () => {
         reportedTimeDiv.innerHTML = `
            <span style="font-weight: bold;">Total Reported:</span>
            <span></span> <!-- Placeholder for date -->
-           <span style="font-weight: bold;">${card.totalReportedHours.toFixed(
-             2
+           <span style="font-weight: bold;">${formatHours(
+             card.totalReportedHours
            )}h</span>
            <span></span> <!-- Placeholder for comment -->
          `;
@@ -262,7 +283,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const dateStr = entry.date
               ? new Date(entry.date).toLocaleDateString()
               : "N/A";
-            const hoursStr = entry.hours.toFixed(2);
+            const hoursStr = formatHours(entry.hours); // Use helper function
             const commentStr = entry.comment || "";
             entryDiv.innerHTML = `
               <span>${userName}</span>
@@ -337,6 +358,53 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     } catch (error) {
       console.error("Error populating user filter:", error);
+    }
+  }
+
+  function populateLabelFilter(boardLabels) {
+    const labelSelectElement = document.getElementById("label-select");
+    if (!labelSelectElement) {
+      console.error(
+        "Cannot populate label filter: element 'label-select' not found."
+      );
+      return;
+    }
+    if (!Array.isArray(boardLabels)) {
+      console.error(
+        "Cannot populate label filter: boardLabels is not an array.",
+        boardLabels
+      );
+      labelSelectElement.innerHTML =
+        '<option value="">Error loading labels</option>';
+      return;
+    }
+
+    try {
+      const currentVal = labelSelectElement.value; // Preserve selection
+      labelSelectElement.innerHTML = '<option value="">All Labels</option>'; // Reset
+
+      // Sort labels alphabetically by name, case-insensitive
+      boardLabels.sort((a, b) =>
+        a.name.localeCompare(b.name, undefined, { sensitivity: "base" })
+      );
+
+      boardLabels.forEach((label) => {
+        const option = document.createElement("option");
+        option.value = label.id;
+        option.textContent = label.name || `(No Name - ${label.color})`; // Handle labels without names
+        // Optional: Add color indicator (might need more styling)
+        // option.style.backgroundColor = label.color; // Simple background color
+        labelSelectElement.appendChild(option);
+      });
+
+      // Restore previous selection if possible
+      if (labelSelectElement.querySelector(`option[value="${currentVal}"]`)) {
+        labelSelectElement.value = currentVal;
+      }
+    } catch (error) {
+      console.error("Error populating label filter:", error);
+      labelSelectElement.innerHTML =
+        '<option value="">Error loading labels</option>';
     }
   }
 

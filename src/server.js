@@ -77,29 +77,36 @@ app.get("/api/boards", async (req, res) => {
 // Get time data for a specific board
 app.get("/api/boards/:boardId/time-data", async (req, res) => {
   const { boardId } = req.params;
-  const { startDate, endDate, userId } = req.query; // Get filter params including userId
+  // Add labelId to destructured query params
+  const { startDate, endDate, userId, labelId } = req.query;
 
   try {
-    // Fetch cards, lists, and members concurrently
-    const [cardsResponse, listsResponse, membersResponse] = await Promise.all([
-      axios.get(`${TRELLO_API_BASE_URL}/boards/${boardId}/cards`, {
-        params: {
-          ...trelloAuth,
-          fields: "id,name,idList,idMembers,labels,url", // Added 'url' field
-          pluginData: true, // Crucial for getting Power-Up data
-        },
-      }),
-      axios.get(`${TRELLO_API_BASE_URL}/boards/${boardId}/lists`, {
-        params: { ...trelloAuth, fields: "id,name" },
-      }),
-      axios.get(`${TRELLO_API_BASE_URL}/boards/${boardId}/members`, {
-        params: { ...trelloAuth, fields: "id,fullName" },
-      }),
-    ]);
+    // Fetch cards, lists, members, and labels concurrently
+    const [cardsResponse, listsResponse, membersResponse, labelsResponse] =
+      await Promise.all([
+        axios.get(`${TRELLO_API_BASE_URL}/boards/${boardId}/cards`, {
+          params: {
+            ...trelloAuth,
+            fields: "id,name,idList,idMembers,labels,url", // Added 'url' field
+            pluginData: true, // Crucial for getting Power-Up data
+          },
+        }),
+        axios.get(`${TRELLO_API_BASE_URL}/boards/${boardId}/lists`, {
+          params: { ...trelloAuth, fields: "id,name" },
+        }),
+        axios.get(`${TRELLO_API_BASE_URL}/boards/${boardId}/members`, {
+          params: { ...trelloAuth, fields: "id,fullName" },
+        }),
+        // Fetch labels for the board
+        axios.get(`${TRELLO_API_BASE_URL}/boards/${boardId}/labels`, {
+          params: { ...trelloAuth, fields: "id,name,color" }, // Get id, name, and color
+        }),
+      ]);
 
     const cards = cardsResponse.data;
     const lists = listsResponse.data;
     const members = membersResponse.data;
+    const boardLabels = labelsResponse.data; // Store fetched labels
 
     // Create mapping objects for lists and members
     const listMap = lists.reduce((map, list) => {
@@ -227,15 +234,26 @@ app.get("/api/boards/:boardId/time-data", async (req, res) => {
           timeEntries: timeEntries, // Now contains filtered and mapped entries
         };
       })
-      // Keep card only if it has time entries OR an estimated time > 0
-      .filter((card) => card.timeEntries.length > 0 || card.estimatedHours > 0);
-    // Removed the redundant filter here
+      // Filter based on time entries/estimates AND selected labelId
+      .filter((card) => {
+        const hasTimeData =
+          card.timeEntries.length > 0 || card.estimatedHours > 0;
+        if (!hasTimeData) return false; // Must have time data
 
-    // Return filtered data along with the maps
+        // If labelId is provided, check if the card has that label
+        if (labelId) {
+          const hasLabel = card.labels.some((label) => label.id === labelId);
+          if (!hasLabel) return false; // Must have the selected label if filter is active
+        }
+        return true; // Keep card if it passes all filters
+      });
+
+    // Return filtered data along with the maps and board labels
     res.json({
       timeData: processedCardData,
       listMap: listMap,
       memberMap: memberMap,
+      boardLabels: boardLabels, // Add labels to the response
     });
   } catch (error) {
     console.error(
