@@ -5,6 +5,12 @@
   <title>Raport czasu dla tablicy</title>
   <script src="https://p.trellocdn.com/power-up.min.js"></script>
   <link rel="stylesheet" href="https://p.trellocdn.com/power-up.css" />
+  
+  <!-- Select2 CSS i JS -->
+  <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+  
   <script src="./js/time-report.js"></script>
   <style>
     body {
@@ -19,9 +25,19 @@
     }
     .filter-section {
       display: flex;
-      gap: 10px;
+      flex-wrap: wrap;
+      gap: 0;
       align-items: center;
       margin-bottom: 20px;
+    }
+    .filter-item {
+      margin: 5px;
+      min-width: 200px;
+    }
+
+    .select2-selection__choice {
+      padding-left: 26px !important;
+      margin-top: 4px 
     }
     button {
       padding: 8px 16px;
@@ -36,6 +52,92 @@
     #close-button {
       background-color: #ebecf0;
     }
+    /* Style dla Select2 - Dark Mode */
+    .select2-container {
+      min-width: 200px !important;
+    }
+
+
+
+    .select2-container--default .select2-selection--multiple .select2-selection__choice {
+      margin-top: 4px !important;
+      padding-left: 24px !important;
+    }
+
+    #filter-button {
+      margin-top: 16px !important
+    }
+
+    .select2-container--default .select2-selection--multiple {
+      border-radius: 3px !important;
+    }
+
+    .select2-container--default .select2-selection--multiple .select2-selection__clear {
+      display: none !important;
+    }
+
+    .select2-selection--multiple {
+      border: 2px solid #A6C5E229 !important;
+      background-color: transparent !important;
+      color: #fff !important;
+      padding: 0 12px !important;
+      min-height: 38px !important;
+    }
+    /* Tekst wybranych opcji */
+    .select2-selection__choice {
+      background-color: #0079bf !important;
+      color: white !important;
+      border: none !important;
+      padding: 3px 8px !important;
+      display: inline-flex !important;
+      gap: 4px !important
+    }
+    .select2-selection__choice__remove {
+      color: #ffcccc !important;
+      margin-right: 5px !important;
+    }
+    /* Dropdown */
+    .select2-dropdown {
+      background-color: #2c3e50 !important;
+      border: 1px solid #444 !important;
+    }
+
+
+    .select2-search__field {
+      display: none !important
+    }
+    .select2-results__option {
+      color: #fff !important;
+    }
+    .select2-container--default .select2-results__option[aria-selected=true] {
+      background-color: #34495e !important;
+    }
+    .select2-container--default .select2-results__option--highlighted[aria-selected] {
+      background-color: #0079bf !important;
+    }
+    .select2-selection__rendered {
+      color: #fff !important;
+    }
+    /* Placeholder */
+    .select2-selection__placeholder {
+      color: #aaa !important;
+    }
+    /* Style dla etykiet z kolorem */
+    .trello-label {
+      padding: 2px 4px;
+      border-radius: 3px;
+    }
+
+    .select2-container--default .select2-selection--multiple .select2-selection__choice__remove {
+      margin-top: 2px !important;
+    margin-left: 4px !important;
+    border-left: 0 !important;
+    border-right: 0 !important;
+    }
+
+    .select2-container--default .select2-selection--multiple .select2-selection__choice__remove:hover {
+      background-color: rgba(0, 0, 0, 0.1) !important;
+    }
   </style>
 </head>
 <body>
@@ -43,24 +145,33 @@
   <h2>Raport czasu dla całej tablicy</h2>
 
   <div class="filter-section">
-    <label style="margin: 0;" for="date-from">Od daty:</label>
-    <input  style="margin: 0;" type="date" id="date-from">
+    <div class="filter-item">
+      <label style="margin: 0; display: block;" for="date-from">Od daty:</label>
+      <input style="margin: 0; width: 100%;" type="date" id="date-from">
+    </div>
 
-    <label style="margin: 0;"  for="date-to">Do daty:</label>
-    <input  style="margin: 0;" type="date" id="date-to">
+    <div class="filter-item">
+      <label style="margin: 0; display: block;"  for="date-to">Do daty:</label>
+      <input style="margin: 0; width: 100%;" type="date" id="date-to">
+    </div>
 
-    <button style="margin: 0;"  id="filter-button">Filtruj</button>
-    <button style="margin: 0;" id="get-all-boards-button">Pobierz dane z wszystkich tablic</button>
-  </div>
+    <div class="filter-item">
+      <label style="margin: 0; display: block;" for="labels-filter">Etykiety:</label>
+      <select style="width: 100%;" id="labels-filter" multiple>
+        <option value="">Ładowanie etykiet...</option>
+      </select>
+    </div>
 
-  <div class="report-section">
-    <h3>Łączny czas dla wszystkich tablic:</h3>
-    <p id="all-boards-total-time">Nie pobrano jeszcze danych</p>
-  </div>
+    <div class="filter-item">
+      <label style="margin: 0; display: block;" for="users-filter">Użytkownicy:</label>
+      <select style="width: 100%;" id="users-filter" multiple>
+        <option value="">Ładowanie użytkowników...</option>
+      </select>
+    </div>
 
-  <div class="report-section">
-    <h3>Raporty czasu według tablic:</h3>
-    <div id="all-boards-reports">Nie pobrano jeszcze danych</div>
+    <div class="filter-item" style="display: flex; justify-content: flex-start; gap: 10px;">
+      <button id="filter-button">Filtruj</button>
+    </div>
   </div>
 
   <div class="report-section">
