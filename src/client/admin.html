@@ -9,14 +9,25 @@
     <script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- App CSS -->
     <link rel="stylesheet" href="admin.css">
 </head>
 <body>
+    <h1>Admin Panel</h1>
 
-    <div class="controls">
-        <div>
-            <label for="board-select">Select Board:</label>
+    <!-- Tab Navigation -->
+    <div class="tab-nav">
+        <button class="tab-button active" data-tab="report-tab">Time Report</button>
+        <button class="tab-button" data-tab="charts-tab">Charts</button>
+    </div>
+
+    <!-- Tab Content -->
+    <div id="report-tab" class="tab-content active">
+        <div class="controls">
+            <div>
+                <label for="board-select">Select Board:</label>
             <select id="board-select" name="board">
                 <option value="">Loading boards...</option>
             </select>
@@ -42,23 +53,41 @@
             </div>
              <button id="apply-filters">Apply Filters</button>
              <button id="export-csv" style="margin-left: 10px;">Export to CSV</button> <!-- Add Export Button -->
+            </div>
+        </div>
+
+        <div class="summary" style="margin-top: 20px; display: none;">
+            <h2>Summary</h2>
+            <div id="summary-content">
+                <!-- Summary data will be populated here -->
+            </div>
+        </div>
+
+        <div class="data-display" style="margin-top: 20px;">
+            <button id="toggle-all-details" style="margin-left: 10px; font-size: 0.8em; padding: 3px 6px;">Expand All</button>
+            <!-- Replace table with a div container for collapsible groups -->
+            <div id="time-entries-container">
+                 <p>Select a board to view time entries.</p>
+            </div>
+            <div id="loading-indicator" style="display: none;">Loading data...</div>
         </div>
     </div>
 
-    <div class="summary" style="margin-top: 20px; display: none;">
-        <h2>Summary</h2>
-        <div id="summary-content">
-            <!-- Summary data will be populated here -->
-        </div>
-    </div>
-
-    <div class="data-display" style="margin-top: 20px;">
-        <button id="toggle-all-details" style="margin-left: 10px; font-size: 0.8em; padding: 3px 6px;">Expand All</button>
-        <!-- Replace table with a div container for collapsible groups -->
-        <div id="time-entries-container">
-             <p>Select a board to view time entries.</p>
-        </div>
-        <div id="loading-indicator" style="display: none;">Loading data...</div>
+    <div id="charts-tab" class="tab-content">
+        <h2>Charts</h2>
+        <p>Select a board and apply filters to view charts.</p>
+        <div id="charts-container" style="display: flex; flex-wrap: wrap; gap: 20px;">
+            <div class="chart-wrapper" style="width: 45%; min-width: 300px;">
+                <h3>Hours per User</h3>
+                <canvas id="userHoursChart"></canvas>
+            </div>
+            <div class="chart-wrapper" style="width: 45%; min-width: 300px;">
+                 <h3>Hours per List</h3>
+                 <canvas id="listHoursChart"></canvas>
+             </div>
+             <!-- Add more chart canvases here as needed -->
+         </div>
+         <div id="charts-loading-indicator" style="display: none;">Loading chart data...</div>
     </div>
 
     <!-- App JS (after dependencies) -->

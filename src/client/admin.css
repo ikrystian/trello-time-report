@@ -5,9 +5,25 @@ body {
   color: #172b4d;
 }
 
-h1,
+h1 {
+  text-align: center;
+  color: #091e42;
+  margin-bottom: 25px;
+}
+
 h2 {
   color: #0052cc; /* Updated color from original */
+  margin-top: 0; /* Remove default top margin for h2 inside tabs */
+  border-bottom: 1px solid #dfe1e6;
+  padding-bottom: 10px;
+  margin-bottom: 15px;
+}
+
+h3 {
+  text-align: center;
+  color: #172b4d;
+  margin-bottom: 10px;
+  font-size: 1.1em;
 }
 
 .controls,
@@ -112,6 +128,85 @@ tbody tr:nth-child(odd) {
   margin-top: 10px;
   font-style: italic;
   color: #5e6c84;
+}
+
+/* --- Styles for Tab Navigation --- */
+.tab-nav {
+  margin-bottom: 0; /* Remove bottom margin */
+  border-bottom: 1px solid #c1c7d0;
+  padding-left: 10px; /* Add some padding */
+}
+
+.tab-button {
+  padding: 10px 20px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  border-bottom: none;
+  background-color: #f4f5f7;
+  margin-right: 5px;
+  margin-bottom: -1px; /* Overlap the container border */
+  border-radius: 3px 3px 0 0;
+  font-size: 1em;
+  color: #42526e;
+  transition: background-color 0.2s ease, color 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.tab-button:hover {
+  background-color: #ebecf0;
+  color: #172b4d;
+}
+
+.tab-button.active {
+  background-color: #ffffff;
+  border-color: #c1c7d0 #c1c7d0 transparent #c1c7d0; /* Border on top, left, right */
+  color: #0052cc;
+  font-weight: bold;
+}
+
+/* --- Styles for Tab Content --- */
+.tab-content {
+  display: none; /* Hide tabs by default */
+  padding: 20px;
+  border: 1px solid #c1c7d0;
+  border-top: none;
+  background-color: #ffffff;
+  border-radius: 0 0 3px 3px; /* Match bottom corners */
+  margin-bottom: 20px; /* Add margin below tab content */
+}
+
+.tab-content.active {
+  display: block; /* Show active tab */
+}
+
+/* --- Chart Styles --- */
+#charts-container {
+  margin-top: 20px;
+  display: flex; /* Use flexbox for layout */
+  flex-wrap: wrap; /* Allow charts to wrap */
+  gap: 20px; /* Space between chart wrappers */
+}
+
+.chart-wrapper {
+  background-color: #f4f5f7;
+  padding: 15px;
+  border-radius: 3px;
+  box-shadow: 0 1px 1px rgba(9, 30, 66, 0.15);
+  flex-grow: 1; /* Allow wrappers to grow */
+  /* width: 45%; Set initial width in HTML style for flexibility */
+  min-width: 300px; /* Ensure charts don't get too small */
+
+  &:first-child {
+    flex: 1; /* Remove left margin for the first chart */
+  }
+}
+
+#charts-loading-indicator {
+  margin-top: 10px;
+  font-style: italic;
+  color: #5e6c84;
+  text-align: center;
+  width: 100%; /* Span full width */
 }
 
 /* --- Styles for Nested Tree View --- */

@@ -28,12 +28,42 @@ document.addEventListener("DOMContentLoaded", () => {
   // --- State Variables ---
   let currentListMap = {};
   let currentMemberMap = {};
-  let currentFetchedTimeData = []; // Store the raw data for export
+  let currentFetchedTimeData = []; // Store the raw data for export/charts
+  let userHoursChartInstance = null;
+  let listHoursChartInstance = null;
+  // Removed dailyHoursChartInstance
 
   // --- DOM References (Declare here, assign after DOM is ready) ---
-  // Chart-related references removed
+  let userHoursChartCtx = null;
+  let listHoursChartCtx = null;
+  // Removed dailyHoursChartCtx
+  let chartsContainer = null;
+  let chartsLoadingIndicator = null;
 
   // --- Helper Functions ---
+
+  // Function to switch tabs
+  function switchTab(tabId) {
+    document.querySelectorAll(".tab-content").forEach((content) => {
+      content.classList.remove("active");
+    });
+    document.querySelectorAll(".tab-button").forEach((button) => {
+      button.classList.remove("active");
+    });
+
+    const selectedContent = document.getElementById(tabId);
+    const selectedButton = document.querySelector(
+      `.tab-button[data-tab="${tabId}"]`
+    );
+
+    if (selectedContent) selectedContent.classList.add("active");
+    if (selectedButton) selectedButton.classList.add("active");
+
+    // Re-render charts if switching to the charts tab and data is available
+    if (tabId === "charts-tab" && currentFetchedTimeData.length > 0) {
+      renderCharts();
+    }
+  }
 
   // Function to update URL parameters without reloading
   function updateUrlParameters() {
@@ -209,17 +239,27 @@ document.addEventListener("DOMContentLoaded", () => {
         currentMemberMap
       );
 
+      // Display entries and render charts
+      displayTimeEntries(
+        currentFetchedTimeData,
+        currentListMap,
+        currentMemberMap
+      );
+      renderCharts(); // Render charts with the new data
+
       // Update URL after fetching and potentially applying initial filters
       // updateUrlParameters(); // Call moved to event handlers to avoid double updates
-
-      // renderCharts(); // Removed chart rendering call
     } catch (error) {
       console.error(`Error fetching time data for board ${boardId}:`, error);
       currentFetchedTimeData = []; // Clear data on error
       if (timeEntriesContainer)
         timeEntriesContainer.innerHTML = `<p>Error loading time data. ${error.message}</p>`;
+      clearCharts(); // Clear charts on error
+      if (chartsContainer)
+        chartsContainer.innerHTML = "<p>Error loading data for charts.</p>";
     } finally {
       if (loadingIndicator) loadingIndicator.style.display = "none";
+      if (chartsLoadingIndicator) chartsLoadingIndicator.style.display = "none"; // Hide chart loader too
     }
   }
 
@@ -434,7 +474,179 @@ document.addEventListener("DOMContentLoaded", () => {
     document.body.removeChild(link);
   }
 
-  // Removed renderCharts and clearCharts functions
+  // --- Chart Rendering Functions ---
+
+  function clearCharts() {
+    if (userHoursChartInstance) userHoursChartInstance.destroy();
+    if (listHoursChartInstance) listHoursChartInstance.destroy();
+    // Removed dailyHoursChartInstance destroy
+    userHoursChartInstance = null;
+    listHoursChartInstance = null;
+    // Removed dailyHoursChartInstance null assignment
+    // Optionally clear the canvas or show a message
+    if (chartsContainer) {
+      chartsContainer.querySelectorAll("canvas").forEach((canvas) => {
+        const ctx = canvas.getContext("2d");
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      });
+      // Reset message if needed, handled elsewhere currently
+      // chartsContainer.innerHTML = '<p>Select a board and apply filters to view charts.</p>';
+    }
+  }
+
+  function renderCharts() {
+    clearCharts(); // Clear previous charts first
+
+    if (!currentFetchedTimeData || currentFetchedTimeData.length === 0) {
+      if (chartsContainer)
+        chartsContainer.innerHTML =
+          "<p>No data available to display charts.</p>";
+      return;
+    }
+    // Removed check for dailyHoursChartCtx
+    if (!userHoursChartCtx || !listHoursChartCtx) {
+      console.error("Chart contexts not initialized.");
+      if (chartsContainer)
+        chartsContainer.innerHTML = "<p>Chart elements failed to load.</p>";
+      return;
+    }
+    if (chartsLoadingIndicator) chartsLoadingIndicator.style.display = "block"; // Show loading indicator
+
+    // Ensure the container doesn't just show the message
+    if (chartsContainer && chartsContainer.querySelector("p")) {
+      chartsContainer.innerHTML = `
+            <div class="chart-wrapper" style="width: 45%; min-width: 300px;">
+                <h3>Hours per User</h3>
+                <canvas id="userHoursChart"></canvas>
+            </div>
+            <div class="chart-wrapper" style="width: 45%; min-width: 300px;">
+                <h3>Hours per List</h3>
+                <canvas id="listHoursChart"></canvas>
+            </div>
+            `; // Removed daily chart wrapper
+      // Re-get contexts after recreating canvases
+      userHoursChartCtx = document
+        .getElementById("userHoursChart")
+        ?.getContext("2d");
+      listHoursChartCtx = document
+        .getElementById("listHoursChart")
+        ?.getContext("2d");
+      // Removed getting dailyHoursChartCtx
+      if (!userHoursChartCtx || !listHoursChartCtx) {
+        // Removed dailyHoursChartCtx check
+        console.error(
+          "Failed to re-initialize chart contexts after clearing message."
+        );
+        if (chartsLoadingIndicator)
+          chartsLoadingIndicator.style.display = "none";
+        return;
+      }
+    }
+
+    try {
+      renderUserHoursChart();
+      renderListHoursChart();
+      // Removed call to renderDailyHoursChart()
+    } catch (error) {
+      console.error("Error rendering charts:", error);
+      if (chartsContainer)
+        chartsContainer.innerHTML = `<p>An error occurred while rendering charts: ${error.message}</p>`;
+    } finally {
+      if (chartsLoadingIndicator) chartsLoadingIndicator.style.display = "none"; // Hide loading indicator
+    }
+  }
+
+  function renderUserHoursChart() {
+    const hoursByUser = currentFetchedTimeData.reduce((acc, card) => {
+      card.timeEntries.forEach((entry) => {
+        const userId = entry.memberId || "unknown";
+        const userName = currentMemberMap[userId] || "Unknown User";
+        acc[userName] = (acc[userName] || 0) + (entry.hours || 0);
+      });
+      return acc;
+    }, {});
+
+    const sortedUsers = Object.entries(hoursByUser).sort(
+      ([, hoursA], [, hoursB]) => hoursB - hoursA
+    );
+    const labels = sortedUsers.map(([name]) => name);
+    const data = sortedUsers.map(([, hours]) => hours);
+
+    userHoursChartInstance = new Chart(userHoursChartCtx, {
+      type: "bar", // Or 'pie', 'doughnut'
+      data: {
+        labels: labels,
+        datasets: [
+          {
+            label: "Reported Hours",
+            data: data,
+            backgroundColor: "rgba(54, 162, 235, 0.6)", // Example color
+            borderColor: "rgba(54, 162, 235, 1)",
+            borderWidth: 1,
+          },
+        ],
+      },
+      options: {
+        scales: {
+          y: { beginAtZero: true },
+        },
+        responsive: true,
+        maintainAspectRatio: true,
+      },
+    });
+  }
+
+  function renderListHoursChart() {
+    const hoursByList = currentFetchedTimeData.reduce((acc, card) => {
+      const listId = card.listId || "unknown";
+      const listName = currentListMap[listId] || "Unknown List";
+      const listHours = card.timeEntries.reduce(
+        (sum, entry) => sum + (entry.hours || 0),
+        0
+      );
+      if (listHours > 0) {
+        // Only include lists with reported time
+        acc[listName] = (acc[listName] || 0) + listHours;
+      }
+      return acc;
+    }, {});
+
+    const sortedLists = Object.entries(hoursByList).sort(
+      ([, hoursA], [, hoursB]) => hoursB - hoursA
+    );
+    const labels = sortedLists.map(([name]) => name);
+    const data = sortedLists.map(([, hours]) => hours);
+
+    listHoursChartInstance = new Chart(listHoursChartCtx, {
+      type: "pie", // Or 'bar'
+      data: {
+        labels: labels,
+        datasets: [
+          {
+            label: "Reported Hours",
+            data: data,
+            backgroundColor: [
+              // Example colors
+              "rgba(255, 99, 132, 0.6)",
+              "rgba(75, 192, 192, 0.6)",
+              "rgba(255, 205, 86, 0.6)",
+              "rgba(201, 203, 207, 0.6)",
+              "rgba(54, 162, 235, 0.6)",
+              "rgba(153, 102, 255, 0.6)",
+              "rgba(255, 159, 64, 0.6)",
+            ],
+            borderWidth: 1,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+      },
+    });
+  }
+
+  // Removed renderDailyHoursChart function
 
   function populateUserFilter(memberMap, valueToSelect = null) {
     const userSelectElement = document.getElementById("user-select");
@@ -619,10 +831,11 @@ document.addEventListener("DOMContentLoaded", () => {
         console.error(
           "Could not find timeEntriesContainerElement in change listener."
         );
-      // clearCharts(); // Removed chart clearing call
-      // if (chartsContainer) // Removed chart container reset
-      //   chartsContainer.innerHTML =
-      //     "<p>Select a board and apply filters to view charts.</p>";
+      clearCharts(); // Clear charts when board changes
+      if (chartsContainer)
+        // Reset chart container message
+        chartsContainer.innerHTML =
+          "<p>Select a board and apply filters to view charts.</p>";
 
       // Reset date picker to empty when board changes
       if (
@@ -707,8 +920,27 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // --- Initial Load ---
-  // Removed assignment of chart element references
+  // Get chart contexts
+  userHoursChartCtx = document
+    .getElementById("userHoursChart")
+    ?.getContext("2d");
+  listHoursChartCtx = document
+    .getElementById("listHoursChart")
+    ?.getContext("2d");
+  // Removed getting dailyHoursChartCtx
+  chartsContainer = document.getElementById("charts-container");
+  chartsLoadingIndicator = document.getElementById("charts-loading-indicator");
+
+  // Add Tab Listeners
+  document.querySelectorAll(".tab-button").forEach((button) => {
+    button.addEventListener("click", () => {
+      const tabId = button.getAttribute("data-tab");
+      switchTab(tabId);
+    });
+  });
+
+  // Initial Tab State (optional, default is first tab)
+  // switchTab('report-tab'); // Or read from URL param if desired
 
   fetchBoards(); // Fetches boards, and *if* initialBoardId exists, it triggers fetchTimeData inside fetchBoards' success handler.
-  // No initial tab switch needed
 });
