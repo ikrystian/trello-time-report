@@ -85,7 +85,7 @@ app.get("/api/boards/:boardId/time-data", async (req, res) => {
       axios.get(`${TRELLO_API_BASE_URL}/boards/${boardId}/cards`, {
         params: {
           ...trelloAuth,
-          fields: "id,name,idList,idMembers,labels", // Add fields as needed
+          fields: "id,name,idList,idMembers,labels,url", // Added 'url' field
           pluginData: true, // Crucial for getting Power-Up data
         },
       }),
@@ -121,11 +121,41 @@ app.get("/api/boards/:boardId/time-data", async (req, res) => {
         );
 
         let timeEntries = [];
+        let estimatedHours = 0; // Initialize estimatedHours outside the try block
+
+        // --- DEBUG LOGGING START ---
+        console.log(`\nProcessing Card ID: ${card.id} (${card.name})`);
+        if (powerUpData) {
+          console.log(`  Raw pluginData.value:`, powerUpData.value);
+        } else {
+          console.log(
+            `  No pluginData found for PowerUp ID: ${TRELLO_POWERUP_ID}`
+          );
+        }
+        // --- DEBUG LOGGING END ---
+
         if (powerUpData && typeof powerUpData.value === "string") {
           // Check if value is a string
           try {
             const parsedValue = JSON.parse(powerUpData.value); // Parse the JSON string
             const rawEntries = parsedValue.timeEntries; // Access the timeEntries array
+            const estimatedMinutes = parsedValue.estimatedTime; // Get estimated time in minutes
+
+            // --- DEBUG LOGGING START ---
+            console.log(
+              `  Parsed estimatedMinutes: ${estimatedMinutes} (Type: ${typeof estimatedMinutes})`
+            );
+            // --- DEBUG LOGGING END ---
+
+            // Convert estimated time to hours
+            estimatedHours = // Assign to the outer variable
+              typeof estimatedMinutes === "number" && estimatedMinutes > 0
+                ? estimatedMinutes / 60
+                : 0;
+
+            // --- DEBUG LOGGING START ---
+            console.log(`  Calculated estimatedHours: ${estimatedHours}`);
+            // --- DEBUG LOGGING END ---
 
             if (Array.isArray(rawEntries)) {
               timeEntries = rawEntries
@@ -176,20 +206,30 @@ app.get("/api/boards/:boardId/time-data", async (req, res) => {
             );
             // Keep timeEntries as []
           }
+        } else if (powerUpData) {
+          // --- DEBUG LOGGING START ---
+          console.error(
+            `  Skipping pluginData for card ${card.id} because value is not a string:`,
+            powerUpData.value
+          );
+          // --- DEBUG LOGGING END ---
         }
         // If value is not a string or parsing fails, timeEntries remains []
 
         return {
           cardId: card.id,
           cardName: card.name,
+          cardUrl: card.url, // Add card URL
           listId: card.idList,
           memberIds: card.idMembers,
           labels: card.labels,
+          estimatedHours: estimatedHours, // Add estimated hours
           timeEntries: timeEntries, // Now contains filtered and mapped entries
         };
       })
-      // Keep the card in the results only if it *still* has time entries after filtering
-      .filter((card) => card.timeEntries.length > 0);
+      // Keep card only if it has time entries OR an estimated time > 0
+      .filter((card) => card.timeEntries.length > 0 || card.estimatedHours > 0);
+    // Removed the redundant filter here
 
     // Return filtered data along with the maps
     res.json({

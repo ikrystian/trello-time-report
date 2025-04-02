@@ -1,70 +1,110 @@
 document.addEventListener("DOMContentLoaded", () => {
+  // --- Get initial references (primarily for adding listeners) ---
   const boardSelect = document.getElementById("board-select");
-  const timeEntriesTableBody = document.getElementById("time-entries-body");
-  const loadingIndicator = document.getElementById("loading-indicator");
-  const filtersDiv = document.querySelector(".filters");
-  const summaryDiv = document.querySelector(".summary");
-  const summaryContent = document.getElementById("summary-content"); // Get summary content element
-  // Filter elements
-  const startDateInput = document.getElementById("start-date");
-  const endDateInput = document.getElementById("end-date");
-  const userSelect = document.getElementById("user-select"); // Add user select reference
   const applyFiltersButton = document.getElementById("apply-filters");
-  const exportCsvButton = document.getElementById("export-csv"); // Add export button reference
+  const exportCsvButton = document.getElementById("export-csv");
 
-  // Variables to store current data for export
-  let currentEntries = [];
+  // --- Check if essential listeners can be attached ---
+  if (!boardSelect || !applyFiltersButton || !exportCsvButton) {
+    console.error(
+      "Initialization Error: Could not find essential control elements (boardSelect, applyFiltersButton, exportCsvButton). Admin panel cannot function."
+    );
+    const container = document.getElementById("time-entries-container");
+    if (container) {
+      container.innerHTML =
+        "<p style='color: red;'>Error: Admin panel failed to initialize correctly. Control elements missing.</p>";
+    }
+    return;
+  }
+
   let currentListMap = {};
   let currentMemberMap = {};
 
-  // --- Function to fetch boards ---
   async function fetchBoards() {
+    const boardSelectElement = document.getElementById("board-select");
+    if (!boardSelectElement) {
+      console.error("fetchBoards: boardSelectElement not found.");
+      return;
+    }
+
     try {
       const response = await fetch("/api/boards");
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const boards = await response.json();
-
-      boardSelect.innerHTML = '<option value="">-- Select a Board --</option>'; // Clear loading message
-      boards.forEach((board) => {
-        const option = document.createElement("option");
-        option.value = board.id;
-        option.textContent = board.name;
-        boardSelect.appendChild(option);
-      });
+      if (boardSelectElement) {
+        boardSelectElement.innerHTML =
+          '<option value="">-- Select a Board --</option>';
+        boards.forEach((board) => {
+          const option = document.createElement("option");
+          option.value = board.id;
+          option.textContent = board.name;
+          boardSelectElement.appendChild(option);
+        });
+      }
     } catch (error) {
       console.error("Error fetching boards:", error);
-      boardSelect.innerHTML = '<option value="">Error loading boards</option>';
-      // Optionally display a more user-friendly error message
+      if (boardSelectElement) {
+        boardSelectElement.innerHTML =
+          '<option value="">Error loading boards</option>';
+      }
     }
   }
 
-  // --- Function to fetch and display time data ---
   async function fetchTimeData(boardId) {
-    if (!boardId) {
-      timeEntriesTableBody.innerHTML =
-        '<tr><td colspan="6">Select a board to view time entries.</td></tr>';
-      filtersDiv.style.display = "none";
-      summaryDiv.style.display = "none";
+    const timeEntriesContainer = document.getElementById(
+      "time-entries-container"
+    );
+    const loadingIndicator = document.getElementById("loading-indicator");
+    const filtersDiv = document.querySelector(".filters");
+    const summaryDiv = document.querySelector(".summary");
+    const summaryContent = document.getElementById("summary-content");
+    const startDateInput = document.getElementById("start-date");
+    const endDateInput = document.getElementById("end-date");
+    const userSelectElementForValue = document.getElementById("user-select");
+
+    if (
+      !timeEntriesContainer ||
+      !loadingIndicator ||
+      !filtersDiv ||
+      !summaryDiv ||
+      !summaryContent ||
+      !startDateInput ||
+      !endDateInput
+    ) {
+      console.error(
+        "Error fetching time data: One or more display/filter elements are missing."
+      );
       return;
     }
 
-    loadingIndicator.style.display = "block";
-    timeEntriesTableBody.innerHTML = ""; // Clear previous data
-    filtersDiv.style.display = "block"; // Show filters
-    summaryDiv.style.display = "block"; // Show summary section (initially empty)
+    if (!boardId) {
+      if (timeEntriesContainer)
+        timeEntriesContainer.innerHTML =
+          "<p>Select a board to view time entries.</p>";
+      if (filtersDiv) filtersDiv.style.display = "none";
+      if (summaryDiv) summaryDiv.style.display = "none";
+      if (summaryContent) summaryContent.innerHTML = "";
+      return;
+    }
 
-    // Read filter values
+    if (loadingIndicator) loadingIndicator.style.display = "block";
+    if (timeEntriesContainer) timeEntriesContainer.innerHTML = ""; // Clear existing content before fetch
+    if (filtersDiv) filtersDiv.style.display = "block";
+    if (summaryDiv) summaryDiv.style.display = "none";
+    if (summaryContent) summaryContent.innerHTML = "";
+
     const startDate = startDateInput.value;
     const endDate = endDateInput.value;
-    const selectedUserId = userSelect.value; // Read selected user ID
+    const selectedUserId = userSelectElementForValue
+      ? userSelectElementForValue.value
+      : null;
 
-    // Construct query parameters
     const queryParams = new URLSearchParams();
     if (startDate) queryParams.append("startDate", startDate);
     if (endDate) queryParams.append("endDate", endDate);
-    if (selectedUserId) queryParams.append("userId", selectedUserId); // Add userId to query
+    if (selectedUserId) queryParams.append("userId", selectedUserId);
 
     const queryString = queryParams.toString();
     const apiUrl = `/api/boards/${boardId}/time-data${
@@ -72,258 +112,311 @@ document.addEventListener("DOMContentLoaded", () => {
     }`;
 
     try {
-      const response = await fetch(apiUrl); // Use URL with query params
+      const response = await fetch(apiUrl);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      // Destructure the response
       const { timeData, listMap, memberMap } = await response.json();
 
-      // Store fetched data for export
-      currentEntries = flattenTimeData(timeData);
       currentListMap = listMap;
       currentMemberMap = memberMap;
 
-      displayTimeEntries(currentEntries, currentListMap, currentMemberMap);
-      calculateAndDisplaySummary(
-        currentEntries,
-        currentMemberMap,
-        currentListMap
-      );
-      populateUserFilter(currentMemberMap); // Populate user dropdown
+      displayTimeEntries(timeData, currentListMap, currentMemberMap);
+      // Removed setTimeout, call directly
+      populateUserFilter(currentMemberMap);
     } catch (error) {
       console.error(`Error fetching time data for board ${boardId}:`, error);
-      // Clear stored data on error? Maybe not, allow export of last successful fetch?
-      // currentEntries = []; currentListMap = {}; currentMemberMap = {};
-      timeEntriesTableBody.innerHTML = `<tr><td colspan="6">Error loading time data. ${error.message}</td></tr>`;
-    } finally {
-      loadingIndicator.style.display = "none";
-    }
-  }
-
-  // --- Helper function to flatten data ---
-  function flattenTimeData(timeData) {
-    const allEntries = [];
-    if (!timeData) return allEntries;
-
-    // The backend now returns timeEntries already filtered and mapped
-    // with { memberId, date, hours, comment } structure.
-    timeData.forEach((card) => {
-      card.timeEntries.forEach((entry) => {
-        // Just add card-level info to the already processed entry
-        allEntries.push({
-          cardName: card.cardName,
-          listId: card.listId,
-          memberId: entry.memberId, // Use memberId from processed entry
-          date: entry.date,
-          hours: entry.hours, // Use hours directly from processed entry
-          comment: entry.comment, // Use comment from processed entry
-        });
-      });
-    });
-    return allEntries;
-  }
-
-  // --- Function to display time entries in the table ---
-  function displayTimeEntries(allEntries, listMap, memberMap) {
-    timeEntriesTableBody.innerHTML = ""; // Clear table
-
-    if (!allEntries || allEntries.length === 0) {
-      timeEntriesTableBody.innerHTML =
-        '<tr><td colspan="6">No time entries found for this board (or matching filters).</td></tr>';
-      return;
-    }
-
-    allEntries.forEach((entry) => {
-      const row = timeEntriesTableBody.insertRow();
-      row.insertCell().textContent = entry.cardName;
-      // Use maps to get names, provide fallback if ID not found
-      row.insertCell().textContent =
-        listMap[entry.listId] || entry.listId || "N/A";
-      row.insertCell().textContent = entry.memberId
-        ? memberMap[entry.memberId] || entry.memberId
-        : "N/A";
-      row.insertCell().textContent = entry.date
-        ? new Date(entry.date).toLocaleDateString()
-        : "N/A";
-      row.insertCell().textContent = entry.hours.toFixed(2); // Display hours consistently
-      row.insertCell().textContent = entry.comment;
-    });
-  }
-
-  // --- Function to calculate and display summary ---
-  function calculateAndDisplaySummary(allEntries, memberMap, listMap) {
-    // Accept memberMap and listMap
-    if (!allEntries || allEntries.length === 0) {
-      summaryContent.innerHTML = "No data to summarize.";
-      return;
-    }
-
-    const totalHours = allEntries.reduce((sum, entry) => sum + entry.hours, 0);
-
-    // Calculate hours per user
-    const hoursPerUser = allEntries.reduce((acc, entry) => {
-      const userId = entry.memberId || "unassigned"; // Group unassigned entries
-      acc[userId] = (acc[userId] || 0) + entry.hours;
-      return acc;
-    }, {});
-
-    // Calculate hours per list
-    const hoursPerList = allEntries.reduce((acc, entry) => {
-      const listId = entry.listId || "unknown-list"; // Group entries with unknown list
-      acc[listId] = (acc[listId] || 0) + entry.hours;
-      return acc;
-    }, {});
-
-    // Build summary HTML
-    let summaryHTML = `<p><strong>Total Hours Reported:</strong> ${totalHours.toFixed(
-      2
-    )}</p>`;
-
-    // Hours per User section
-    summaryHTML += "<h4>Hours per User:</h4><ul>";
-    for (const userId in hoursPerUser) {
-      const userName =
-        userId === "unassigned"
-          ? "Unassigned"
-          : memberMap[userId] || `Unknown (${userId})`;
-      summaryHTML += `<li>${userName}: ${hoursPerUser[userId].toFixed(
-        2
-      )} hours</li>`;
-    }
-    summaryHTML += "</ul>";
-
-    // Hours per List section
-    summaryHTML += "<h4>Hours per List:</h4><ul>";
-    for (const listId in hoursPerList) {
-      const listName =
-        listId === "unknown-list"
-          ? "Unknown List"
-          : listMap[listId] || `Unknown (${listId})`;
-      summaryHTML += `<li>${listName}: ${hoursPerList[listId].toFixed(
-        2
-      )} hours</li>`;
-    }
-    summaryHTML += "</ul>";
-
-    summaryContent.innerHTML = summaryHTML;
-  }
-
-  // --- Function to export data to CSV ---
-  function exportToCSV() {
-    if (currentEntries.length === 0) {
-      alert("No data available to export.");
-      return;
-    }
-
-    const headers = [
-      "Card Name",
-      "List Name",
-      "User",
-      "Date",
-      "Hours",
-      "Comment",
-    ];
-
-    // Function to escape CSV fields containing commas or quotes
-    const escapeCSV = (field) => {
-      if (field === null || field === undefined) return "";
-      let str = String(field);
-      // If field contains comma, double quote, or newline, enclose in double quotes
-      if (str.includes(",") || str.includes('"') || str.includes("\n")) {
-        // Escape existing double quotes by doubling them
-        str = str.replace(/"/g, '""');
-        return `"${str}"`;
+      if (timeEntriesContainer) {
+        timeEntriesContainer.innerHTML = `<p>Error loading time data. ${error.message}</p>`;
       }
-      return str;
-    };
-
-    const csvRows = currentEntries.map((entry) => {
-      const listName = currentListMap[entry.listId] || entry.listId || "N/A";
-      const userName = entry.memberId
-        ? currentMemberMap[entry.memberId] || entry.memberId
-        : "N/A";
-      const dateStr = entry.date
-        ? new Date(entry.date).toLocaleDateString()
-        : "N/A";
-      const hoursStr = entry.hours.toFixed(2);
-
-      return [
-        escapeCSV(entry.cardName),
-        escapeCSV(listName),
-        escapeCSV(userName),
-        escapeCSV(dateStr),
-        escapeCSV(hoursStr),
-        escapeCSV(entry.comment),
-      ].join(",");
-    });
-
-    const csvString = [headers.join(","), ...csvRows].join("\n");
-    const blob = new Blob([csvString], { type: "text/csv;charset=utf-8;" });
-
-    // Create a link and trigger the download
-    const link = document.createElement("a");
-    const url = URL.createObjectURL(blob);
-    link.setAttribute("href", url);
-    const boardName =
-      boardSelect.options[boardSelect.selectedIndex]?.text || "board";
-    const filename = `trello-time-report-${boardName
-      .replace(/[^a-z0-9]/gi, "_")
-      .toLowerCase()}.csv`;
-    link.setAttribute("download", filename);
-    link.style.visibility = "hidden";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url); // Clean up
+    } finally {
+      if (loadingIndicator) loadingIndicator.style.display = "none";
+    }
   }
 
-  // --- Function to populate user filter dropdown ---
-  function populateUserFilter(memberMap) {
-    const currentVal = userSelect.value; // Remember current selection
-    userSelect.innerHTML = '<option value="">All Users</option>'; // Reset dropdown
+  function displayTimeEntries(cardDataArray, listMap, memberMap) {
+    const timeEntriesContainer = document.getElementById(
+      "time-entries-container"
+    );
+    if (!timeEntriesContainer) return;
+    // Ensure container is cleared here, before adding new content
+    timeEntriesContainer.innerHTML = "";
 
-    // Sort members by name for better UX
-    const sortedMembers = Object.entries(memberMap).sort(
-      ([, nameA], [, nameB]) => nameA.localeCompare(nameB)
+    if (!cardDataArray || cardDataArray.length === 0) {
+      timeEntriesContainer.innerHTML =
+        "<p>No cards with time entries or estimates found (or matching filters).</p>";
+      return;
+    }
+
+    const groupedByList = cardDataArray.reduce((acc, card) => {
+      console.log(card);
+      const listId = card.listId || "unknown-list";
+      if (!acc[listId]) {
+        acc[listId] = {
+          listName: listMap[listId] || "Unknown List",
+          cards: [],
+          totalReportedHours: 0,
+          totalEstimatedHours: 0,
+        };
+      }
+      const cardReportedHours = card.timeEntries.reduce(
+        (sum, entry) => sum + entry.hours,
+        0
+      );
+      card.totalReportedHours = cardReportedHours;
+      acc[listId].cards.push(card);
+      acc[listId].totalReportedHours += cardReportedHours;
+      acc[listId].totalEstimatedHours += card.estimatedHours || 0;
+      return acc;
+    }, {});
+
+    const sortedLists = Object.values(groupedByList).sort((a, b) =>
+      a.listName.localeCompare(b.listName)
     );
 
-    sortedMembers.forEach(([id, name]) => {
-      const option = document.createElement("option");
-      option.value = id;
-      option.textContent = name;
-      userSelect.appendChild(option);
-    });
+    sortedLists.forEach((listGroup) => {
+      const listDetails = document.createElement("details");
+      listDetails.classList.add("list-group-details");
+      listDetails.open = true;
 
-    // Re-select previous value if it still exists
-    if (userSelect.querySelector(`option[value="${currentVal}"]`)) {
-      userSelect.value = currentVal;
+      const listSummary = document.createElement("summary");
+      listSummary.classList.add("list-summary");
+      listSummary.innerHTML = `
+        <span class="list-name">${listGroup.listName}</span>
+        <span class="list-hours">(Est: ${listGroup.totalEstimatedHours.toFixed(
+          2
+        )}h / Rep: ${listGroup.totalReportedHours.toFixed(2)}h)</span>`;
+      listDetails.appendChild(listSummary);
+
+      const cardsContainer = document.createElement("div");
+      cardsContainer.classList.add("cards-container");
+      listDetails.appendChild(cardsContainer);
+
+      listGroup.cards.sort((a, b) => a.cardName.localeCompare(b.cardName));
+
+      listGroup.cards.forEach((card) => {
+        const cardDetails = document.createElement("details");
+        cardDetails.classList.add("card-group-details");
+
+        const cardSummary = document.createElement("summary");
+        // Add the Trello link here
+        cardSummary.innerHTML = `
+          <span class="card-name">${card.cardName}</span>
+          <a href="${
+            card.cardUrl
+          }" target="_blank" class="card-trello-link" title="Open card in Trello">🔗</a>
+          <span class="card-hours">(Est: ${(card.estimatedHours || 0).toFixed(
+            2
+          )}h / Rep: ${card.totalReportedHours.toFixed(2)}h)</span>`;
+        cardDetails.appendChild(cardSummary);
+
+        const entriesDiv = document.createElement("div");
+        entriesDiv.classList.add("card-entries-list");
+
+        // --- Add Estimated Time Row ---
+        const estimatedTimeDiv = document.createElement("div");
+        estimatedTimeDiv.classList.add("entry-item", "entry-estimated"); // Add a class for styling
+        estimatedTimeDiv.innerHTML = `
+          <span style="font-weight: bold;">Total Estimated:</span>
+          <span></span> <!-- Placeholder for date -->
+          <span style="font-weight: bold;">${(card.estimatedHours || 0).toFixed(
+            2
+          )}h</span>
+          <span></span> <!-- Placeholder for comment -->
+         `;
+        entriesDiv.appendChild(estimatedTimeDiv);
+        // --- End Estimated Time Row ---
+
+        // --- Add Total Reported Time Row ---
+        const reportedTimeDiv = document.createElement("div");
+        reportedTimeDiv.classList.add("entry-item", "entry-reported-total"); // Add a class for styling
+        reportedTimeDiv.innerHTML = `
+           <span style="font-weight: bold;">Total Reported:</span>
+           <span></span> <!-- Placeholder for date -->
+           <span style="font-weight: bold;">${card.totalReportedHours.toFixed(
+             2
+           )}h</span>
+           <span></span> <!-- Placeholder for comment -->
+         `;
+        entriesDiv.appendChild(reportedTimeDiv);
+        // --- End Total Reported Time Row ---
+
+        const headerDiv = document.createElement("div");
+        headerDiv.classList.add("entry-item", "entry-header");
+        headerDiv.innerHTML = `
+          <span>User</span>
+          <span>Date</span>
+          <span>Hours</span>
+          <span>Comment</span>`;
+        entriesDiv.appendChild(headerDiv);
+
+        card.timeEntries.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+        if (card.timeEntries.length > 0) {
+          card.timeEntries.forEach((entry) => {
+            const entryDiv = document.createElement("div");
+            entryDiv.classList.add("entry-item");
+            const userName = entry.memberId
+              ? memberMap[entry.memberId] || entry.memberId
+              : "N/A";
+            const dateStr = entry.date
+              ? new Date(entry.date).toLocaleDateString()
+              : "N/A";
+            const hoursStr = entry.hours.toFixed(2);
+            const commentStr = entry.comment || "";
+            entryDiv.innerHTML = `
+              <span>${userName}</span>
+              <span>${dateStr}</span>
+              <span>${hoursStr}</span>
+              <span>${commentStr}</span>`;
+            entriesDiv.appendChild(entryDiv);
+          });
+        } else {
+          const noEntriesDiv = document.createElement("div");
+          noEntriesDiv.classList.add("entry-item", "no-entries");
+          noEntriesDiv.textContent =
+            "No reported time entries for this period.";
+          entriesDiv.appendChild(noEntriesDiv);
+        }
+        cardDetails.appendChild(entriesDiv);
+        cardsContainer.appendChild(cardDetails);
+      });
+      if (timeEntriesContainer) {
+        timeEntriesContainer.appendChild(listDetails);
+      }
+    });
+  }
+
+  function exportToCSV() {
+    alert("Export function needs update for the new data structure.");
+    return;
+  }
+
+  function populateUserFilter(memberMap) {
+    const userSelectElement = document.getElementById("user-select");
+    if (!userSelectElement) {
+      console.error(
+        "Cannot populate user filter: element 'user-select' not found."
+      );
+      return;
+    }
+
+    try {
+      // Add explicit null check before reading value
+      const currentVal = userSelectElement ? userSelectElement.value : "";
+      // Ensure element exists before setting innerHTML
+      if (userSelectElement) {
+        userSelectElement.innerHTML = '<option value="">All Users</option>';
+      } else {
+        console.error(
+          "User select element became null before setting innerHTML."
+        );
+        return; // Stop if element is null here
+      }
+
+      const sortedMembers = Object.entries(memberMap).sort(
+        ([, nameA], [, nameB]) => nameA.localeCompare(nameB)
+      );
+
+      sortedMembers.forEach(([id, name]) => {
+        const option = document.createElement("option");
+        option.value = id;
+        option.textContent = name;
+        // Check again before appendChild
+        if (userSelectElement) {
+          userSelectElement.appendChild(option);
+        }
+      });
+
+      // Check again before setting value
+      if (
+        userSelectElement &&
+        userSelectElement.querySelector(`option[value="${currentVal}"]`)
+      ) {
+        userSelectElement.value = currentVal;
+      }
+    } catch (error) {
+      console.error("Error populating user filter:", error);
     }
   }
 
   // --- Event Listeners ---
   boardSelect.addEventListener("change", (event) => {
-    const selectedBoardId = event.target.value;
-    // Clear previous data when changing board before fetching new
-    currentEntries = [];
-    currentListMap = {};
-    currentMemberMap = {};
-    timeEntriesTableBody.innerHTML = '<tr><td colspan="6">Loading...</td></tr>';
-    summaryContent.innerHTML = "";
-    userSelect.innerHTML = '<option value="">All Users</option>'; // Reset user filter
-    fetchTimeData(selectedBoardId);
-  });
-
-  applyFiltersButton.addEventListener("click", () => {
-    const selectedBoardId = boardSelect.value;
-    if (selectedBoardId) {
-      fetchTimeData(selectedBoardId); // Re-fetch data with current filter values
-    } else {
-      alert("Please select a board first.");
+    try {
+      const selectedBoardId = event.target.value;
+      currentListMap = {};
+      currentMemberMap = {};
+      const timeEntriesContainerElement = document.getElementById(
+        "time-entries-container"
+      );
+      if (timeEntriesContainerElement) {
+        // Removed innerHTML assignment here
+      } else {
+        console.error(
+          "Could not find timeEntriesContainerElement in change listener."
+        );
+      }
+      fetchTimeData(selectedBoardId);
+    } catch (error) {
+      console.error("Error in boardSelect change listener:", error);
     }
   });
 
-  exportCsvButton.addEventListener("click", exportToCSV); // Add listener for export button
+  applyFiltersButton.addEventListener("click", () => {
+    // Wrap entire listener in try...catch
+    try {
+      const boardSelectElement = document.getElementById("board-select"); // Get fresh ref
+      if (!boardSelectElement) {
+        console.error(
+          "Apply Filters Error: Could not find board select element."
+        );
+        alert("Error: Board selection not found.");
+        return;
+      }
+      const selectedBoardId = boardSelectElement.value;
+      if (selectedBoardId) {
+        fetchTimeData(selectedBoardId);
+      } else {
+        alert("Please select a board first.");
+      }
+    } catch (error) {
+      console.error("Error in applyFiltersButton click listener:", error);
+      alert(
+        "An error occurred while applying filters. Please check the console."
+      );
+    }
+  });
+
+  exportCsvButton.addEventListener("click", exportToCSV);
+
+  // --- Toggle All Details Listener ---
+  const toggleAllButton = document.getElementById("toggle-all-details");
+  if (toggleAllButton) {
+    toggleAllButton.addEventListener("click", () => {
+      const container = document.getElementById("time-entries-container");
+      if (!container) return;
+
+      const allDetails = container.querySelectorAll("details");
+      if (allDetails.length === 0) return; // Nothing to toggle
+
+      // Determine the target state: if *any* are closed, open all. Otherwise, close all.
+      let shouldOpen = false;
+      for (const detail of allDetails) {
+        if (!detail.open) {
+          shouldOpen = true;
+          break;
+        }
+      }
+
+      // Apply the state and update button text
+      allDetails.forEach((detail) => {
+        detail.open = shouldOpen;
+      });
+      toggleAllButton.textContent = shouldOpen ? "Collapse All" : "Expand All";
+    });
+  } else {
+    console.warn("Toggle all button not found."); // Warn if button is missing
+  }
 
   // --- Initial Load ---
   fetchBoards();

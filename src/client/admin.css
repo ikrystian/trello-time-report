@@ -7,12 +7,12 @@ body {
 
 h1,
 h2 {
-  color: #0052cc;
+  color: #0052cc; /* Updated color from original */
 }
 
 .controls,
 .filters,
-.summary,
+.summary, /* Keep summary styles for now, though it's hidden */
 .data-display {
   background-color: #ffffff;
   padding: 15px;
@@ -22,8 +22,11 @@ h2 {
 }
 
 label {
-  margin-right: 5px;
+  /* display: block; */ /* Removed from original for inline display */
+  margin-right: 5px; /* Adjusted from original */
+  margin-bottom: 5px; /* Added */
   font-weight: bold;
+  color: #5e6c84; /* Added */
 }
 
 select,
@@ -36,17 +39,33 @@ button {
   font-size: 14px;
 }
 
+select {
+  min-width: 200px; /* Added */
+}
+
 button {
   background-color: #0079bf;
   color: white;
   cursor: pointer;
   border: none;
+  transition: background-color 0.2s ease; /* Added */
 }
 
 button:hover {
   background-color: #026aa7;
 }
 
+#export-csv {
+  /* Added */
+  background-color: #61bd4f; /* Green for export */
+}
+#export-csv:hover {
+  /* Added */
+  background-color: #519839;
+}
+
+/* Remove original table styles as table is gone */
+/*
 table {
   width: 100%;
   border-collapse: collapse;
@@ -68,9 +87,226 @@ th {
 tbody tr:nth-child(odd) {
   background-color: #f4f5f7;
 }
+*/
 
 #loading-indicator {
   margin-top: 10px;
   font-style: italic;
   color: #5e6c84;
+}
+
+/* --- Styles for Nested Tree View --- */
+
+#time-entries-container {
+  margin-top: 15px;
+}
+
+/* List Level */
+.list-group-details {
+  border: 1px solid #c1c7d0; /* Slightly darker border for lists */
+  border-radius: 3px;
+  margin-bottom: 15px; /* More space between lists */
+  background-color: #ffffff;
+}
+
+.list-group-details summary {
+  list-style: none;
+  padding: 12px 15px;
+  background-color: #eaeaec; /* Different background for list summary */
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 1.1em; /* Larger font for list names */
+  border-radius: 3px 3px 0 0;
+  transition: background-color 0.2s ease;
+  position: relative;
+  padding-left: 30px;
+  color: #172b4d;
+  display: flex; /* Use flexbox for alignment */
+  justify-content: space-between; /* Space out name and hours */
+  align-items: center;
+}
+.list-group-details summary::-webkit-details-marker {
+  display: none;
+}
+.list-group-details summary::before {
+  content: "▶";
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.8em;
+  color: #42526e;
+  transition: transform 0.2s ease;
+}
+.list-group-details[open] > summary::before {
+  transform: translateY(-50%) rotate(90deg);
+}
+.list-group-details summary:hover {
+  background-color: #dfe1e6;
+}
+.list-hours {
+  font-size: 0.9em;
+  font-weight: normal;
+  color: #5e6c84;
+}
+
+.cards-container {
+  padding: 5px 10px 10px 25px; /* Indent cards within the list */
+  border-top: 1px solid #c1c7d0;
+}
+
+/* Card Level */
+.card-group-details {
+  border: 1px solid #dfe1e6;
+  border-radius: 3px;
+  margin-top: 10px; /* Space between cards */
+  margin-bottom: 5px;
+  background-color: #ffffff;
+}
+.card-group-details:first-child {
+  margin-top: 5px; /* Less top margin for the first card in a list */
+}
+
+.card-group-details summary {
+  list-style: none;
+  padding: 8px 12px; /* Smaller padding for cards */
+  background-color: #f4f5f7;
+  cursor: pointer;
+  font-weight: bold;
+  border-radius: 3px 3px 0 0;
+  transition: background-color 0.2s ease;
+  position: relative;
+  padding-left: 25px;
+  color: #172b4d;
+  font-size: 1em; /* Regular font size for cards */
+  display: flex;
+  /* justify-content: space-between; */ /* Remove this to control spacing manually */
+  align-items: center;
+  gap: 8px; /* Add some gap between items */
+}
+.card-group-details summary .card-name {
+  flex-grow: 1; /* Allow card name to take up available space */
+  margin-right: auto; /* Push other elements to the right */
+}
+.card-group-details summary::-webkit-details-marker {
+  display: none;
+}
+.card-group-details summary::before {
+  content: "▶";
+  position: absolute;
+  left: 8px; /* Slightly less indent for card marker */
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.75em;
+  color: #42526e;
+  transition: transform 0.2s ease;
+}
+.card-group-details[open] > summary::before {
+  transform: translateY(-50%) rotate(90deg);
+}
+.card-group-details summary:hover {
+  background-color: #ebecf0;
+}
+
+/* Style for the Trello link */
+.card-trello-link {
+  visibility: hidden; /* Hide by default */
+  opacity: 0;
+  transition: opacity 0.2s ease-in-out;
+  text-decoration: none;
+  font-size: 0.9em;
+  margin: 0 5px; /* Add some space around the link */
+}
+.card-group-details summary:hover .card-trello-link {
+  visibility: visible; /* Show on hover */
+  opacity: 1;
+}
+
+.card-hours {
+  font-size: 0.85em;
+  font-weight: normal;
+  color: #5e6c84;
+  white-space: nowrap; /* Prevent hours from wrapping */
+}
+
+/* Entry Level */
+.card-entries-list {
+  padding: 0;
+  border-top: 1px solid #dfe1e6;
+}
+
+.entry-item {
+  display: grid;
+  /* Adjust columns: User, Date, Hours, Comment */
+  grid-template-columns: 1.5fr 1fr 0.8fr 3fr;
+  gap: 10px;
+  padding: 6px 12px; /* Slightly less padding */
+  border-bottom: 1px solid #ebecf0;
+  font-size: 13px;
+  color: #172b4d;
+  align-items: start; /* Align items to the top */
+}
+.entry-item:last-child {
+  border-bottom: none;
+}
+
+.entry-item span {
+  overflow-wrap: break-word; /* Allow long comments to wrap */
+  word-break: break-word;
+  white-space: normal; /* Override nowrap if previously set */
+}
+
+.entry-header {
+  font-weight: bold;
+  background-color: #fafbfc;
+  color: #5e6c84;
+  border-bottom: 1px solid #dfe1e6;
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+
+/* Style for the added estimated time row */
+.entry-estimated {
+  background-color: #f0f0f0; /* Light grey background */
+  font-style: italic;
+  color: #444;
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+.entry-estimated span:first-child {
+  /* Style the "Total Estimated:" label */
+  font-weight: bold;
+  font-style: normal;
+}
+.entry-estimated span:nth-child(3) {
+  /* Style the estimated hours value */
+  font-weight: bold;
+  font-style: normal;
+}
+
+/* Style for the added total reported time row */
+.entry-reported-total {
+  background-color: #e6f7ff; /* Light blue background */
+  font-style: italic;
+  color: #333;
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+.entry-reported-total span:first-child {
+  /* Style the "Total Reported:" label */
+  font-weight: bold;
+  font-style: normal;
+}
+.entry-reported-total span:nth-child(3) {
+  /* Style the reported hours value */
+  font-weight: bold;
+  font-style: normal;
+}
+
+.no-entries {
+  grid-column: 1 / -1; /* Span all columns */
+  text-align: center;
+  color: #5e6c84;
+  font-style: italic;
+  padding: 10px;
 }
