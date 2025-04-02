@@ -29,6 +29,13 @@ h2 {
 
 .controls {
   display: flex;
+  /* --- Sticky Header --- */
+  position: sticky;
+  top: 0;
+  z-index: 100; /* Ensure it stays above other content */
+  background-color: #ffffff; /* Match existing background */
+  /* Add padding/margin adjustments if needed after testing */
+  /* --- End Sticky Header --- */
   label {
     margin: 0;
   }
