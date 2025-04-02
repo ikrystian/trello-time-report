@@ -1,4 +1,12 @@
 document.addEventListener("DOMContentLoaded", () => {
+  // --- Parse URL Parameters ---
+  const urlParams = new URLSearchParams(window.location.search);
+  const initialBoardId = urlParams.get("boardId");
+  const initialStartDate = urlParams.get("startDate");
+  const initialEndDate = urlParams.get("endDate");
+  const initialUserId = urlParams.get("userId");
+  const initialLabelId = urlParams.get("labelId");
+
   // --- Get initial references (primarily for adding listeners) ---
   const boardSelect = document.getElementById("board-select");
   const applyFiltersButton = document.getElementById("apply-filters");
@@ -26,6 +34,31 @@ document.addEventListener("DOMContentLoaded", () => {
   // Chart-related references removed
 
   // --- Helper Functions ---
+
+  // Function to update URL parameters without reloading
+  function updateUrlParameters() {
+    const selectedBoardId = boardSelect.value;
+    const pickerData = $("#date-range-picker").data("daterangepicker");
+    const startDate = pickerData?.startDate?.isValid()
+      ? pickerData.startDate.format("YYYY-MM-DD")
+      : null;
+    const endDate = pickerData?.endDate?.isValid()
+      ? pickerData.endDate.format("YYYY-MM-DD")
+      : null;
+    const selectedUserId = document.getElementById("user-select")?.value;
+    const selectedLabelId = document.getElementById("label-select")?.value;
+
+    const params = new URLSearchParams();
+    if (selectedBoardId) params.set("boardId", selectedBoardId);
+    if (startDate) params.set("startDate", startDate);
+    if (endDate) params.set("endDate", endDate);
+    if (selectedUserId) params.set("userId", selectedUserId);
+    if (selectedLabelId) params.set("labelId", selectedLabelId);
+
+    const newUrl = `${window.location.pathname}?${params.toString()}`;
+    // Use replaceState to avoid polluting browser history excessively
+    window.history.replaceState({ path: newUrl }, "", newUrl);
+  }
 
   // Helper function to format hours (e.g., 8.5, 8, not 8.50 or 8.00)
   function formatHours(hours) {
@@ -56,6 +89,22 @@ document.addEventListener("DOMContentLoaded", () => {
         option.textContent = board.name;
         boardSelectElement.appendChild(option);
       });
+
+      // --- Apply initial board selection from URL ---
+      if (
+        initialBoardId &&
+        boardSelectElement.querySelector(`option[value="${initialBoardId}"]`)
+      ) {
+        boardSelectElement.value = initialBoardId;
+        // Trigger fetchTimeData only if boardId was in URL and successfully set
+        fetchTimeData(initialBoardId);
+      } else {
+        // If no valid initial board ID, hide filters/summary
+        const filtersDiv = document.querySelector(".filters");
+        const summaryDiv = document.querySelector(".summary");
+        if (filtersDiv) filtersDiv.style.display = "none";
+        if (summaryDiv) summaryDiv.style.display = "none";
+      }
     } catch (error) {
       console.error("Error fetching boards:", error);
       if (boardSelectElement)
@@ -149,13 +198,20 @@ document.addEventListener("DOMContentLoaded", () => {
       currentMemberMap = memberMap;
       currentFetchedTimeData = timeData; // Store fetched data
 
+      // Populate filters first, applying initial values if present
+      populateUserFilter(currentMemberMap, initialUserId);
+      populateLabelFilter(boardLabels, initialLabelId);
+
+      // Now display entries based on potentially pre-filled filters
       displayTimeEntries(
         currentFetchedTimeData,
         currentListMap,
         currentMemberMap
       );
-      populateUserFilter(currentMemberMap);
-      populateLabelFilter(boardLabels);
+
+      // Update URL after fetching and potentially applying initial filters
+      // updateUrlParameters(); // Call moved to event handlers to avoid double updates
+
       // renderCharts(); // Removed chart rendering call
     } catch (error) {
       console.error(`Error fetching time data for board ${boardId}:`, error);
@@ -246,19 +302,7 @@ document.addEventListener("DOMContentLoaded", () => {
           const entriesDiv = document.createElement("div");
           entriesDiv.classList.add("card-entries-list");
 
-          const estimatedTimeDiv = document.createElement("div");
-          estimatedTimeDiv.classList.add("entry-item", "entry-estimated");
-          estimatedTimeDiv.innerHTML = `<span style="font-weight: bold;">Total Estimated:</span> <span></span> <span style="font-weight: bold;">${formatHours(
-            card.estimatedHours || 0
-          )}h</span> <span></span>`;
-          entriesDiv.appendChild(estimatedTimeDiv);
-
-          const reportedTimeDiv = document.createElement("div");
-          reportedTimeDiv.classList.add("entry-item", "entry-reported-total");
-          reportedTimeDiv.innerHTML = `<span style="font-weight: bold;">Total Reported:</span> <span></span> <span style="font-weight: bold;">${formatHours(
-            card.totalReportedHours
-          )}h</span> <span></span>`;
-          entriesDiv.appendChild(reportedTimeDiv);
+          // Removed Total Estimated and Total Reported divs
 
           const headerDiv = document.createElement("div");
           headerDiv.classList.add("entry-item", "entry-header");
@@ -392,7 +436,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Removed renderCharts and clearCharts functions
 
-  function populateUserFilter(memberMap) {
+  function populateUserFilter(memberMap, valueToSelect = null) {
     const userSelectElement = document.getElementById("user-select");
     if (!userSelectElement) {
       console.error(
@@ -412,15 +456,17 @@ document.addEventListener("DOMContentLoaded", () => {
         option.textContent = name;
         userSelectElement.appendChild(option);
       });
-      if (userSelectElement.querySelector(`option[value="${currentVal}"]`)) {
-        userSelectElement.value = currentVal;
+      // Set value based on parameter or previously selected value
+      const finalValue = valueToSelect || currentVal;
+      if (userSelectElement.querySelector(`option[value="${finalValue}"]`)) {
+        userSelectElement.value = finalValue;
       }
     } catch (error) {
       console.error("Error populating user filter:", error);
     }
   }
 
-  function populateLabelFilter(boardLabels) {
+  function populateLabelFilter(boardLabels, valueToSelect = null) {
     const labelSelectElement = document.getElementById("label-select");
     if (!labelSelectElement) {
       console.error(
@@ -449,8 +495,10 @@ document.addEventListener("DOMContentLoaded", () => {
         option.textContent = label.name || `(No Name - ${label.color})`;
         labelSelectElement.appendChild(option);
       });
-      if (labelSelectElement.querySelector(`option[value="${currentVal}"]`)) {
-        labelSelectElement.value = currentVal;
+      // Set value based on parameter or previously selected value
+      const finalValue = valueToSelect || currentVal;
+      if (labelSelectElement.querySelector(`option[value="${finalValue}"]`)) {
+        labelSelectElement.value = finalValue;
       }
     } catch (error) {
       console.error("Error populating label filter:", error);
@@ -482,15 +530,39 @@ document.addEventListener("DOMContentLoaded", () => {
       },
     });
 
+    // --- Apply initial date range from URL ---
+    if (initialStartDate && initialEndDate) {
+      const startDateMoment = moment(initialStartDate, "YYYY-MM-DD");
+      const endDateMoment = moment(initialEndDate, "YYYY-MM-DD");
+      if (startDateMoment.isValid() && endDateMoment.isValid()) {
+        $("#date-range-picker")
+          .data("daterangepicker")
+          .setStartDate(startDateMoment);
+        $("#date-range-picker")
+          .data("daterangepicker")
+          .setEndDate(endDateMoment);
+        $("#date-range-picker").val(
+          startDateMoment.format("YYYY-MM-DD") +
+            " - " +
+            endDateMoment.format("YYYY-MM-DD")
+        );
+      } else {
+        $("#date-range-picker").val(""); // Clear if dates are invalid
+      }
+    } else {
+      $("#date-range-picker").val(""); // Clear if no dates in URL
+    }
+
     // Event listener for when the picker is shown
     $("#date-range-picker").on("show.daterangepicker", function (ev, picker) {
-      // If the input is currently empty, set the picker's dates to the current month
-      if (!$(this).val()) {
+      // If the input is currently empty AND no initial dates were set, default to current month
+      if (!$(this).val() && !initialStartDate && !initialEndDate) {
         const startOfMonth = moment().startOf("month");
         const endOfMonth = moment().endOf("month");
         picker.setStartDate(startOfMonth);
         picker.setEndDate(endOfMonth);
       }
+      // If dates *were* set (either from URL or user action), the picker should open showing those dates.
     });
 
     $("#date-range-picker").on("apply.daterangepicker", function (ev, picker) {
@@ -499,6 +571,7 @@ document.addEventListener("DOMContentLoaded", () => {
           " - " +
           picker.endDate.format("YYYY-MM-DD")
       );
+      updateUrlParameters(); // Update URL
       // Trigger filter fetch when a range is applied
       const selectedBoardId = document.getElementById("board-select").value;
       if (selectedBoardId) fetchTimeData(selectedBoardId);
@@ -506,13 +579,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
     $("#date-range-picker").on("cancel.daterangepicker", function (ev, picker) {
       $(this).val(""); // Clear the input
+      // Reset picker dates to avoid keeping old selection internally
+      picker.setStartDate(moment().startOf("month")); // Or some other default
+      picker.setEndDate(moment().endOf("month"));
+      updateUrlParameters(); // Update URL (will remove date params)
       // Trigger filter fetch when cleared
       const selectedBoardId = document.getElementById("board-select").value;
       if (selectedBoardId) fetchTimeData(selectedBoardId);
     });
 
-    // Keep input empty initially
-    $("#date-range-picker").val("");
+    // Initial value is set based on URL params above
+    // $("#date-range-picker").val(""); // Removed this line
   } else {
     console.error(
       "jQuery or daterangepicker library not loaded. Date range picker will not function."
@@ -528,6 +605,7 @@ document.addEventListener("DOMContentLoaded", () => {
   boardSelect.addEventListener("change", (event) => {
     try {
       const selectedBoardId = event.target.value;
+      updateUrlParameters(); // Update URL when board changes
       currentListMap = {};
       currentMemberMap = {};
       currentFetchedTimeData = [];
@@ -565,6 +643,12 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       }
 
+      // Reset filters when board changes? Optional, but often desired.
+      // document.getElementById("user-select").value = "";
+      // document.getElementById("label-select").value = "";
+      // $("#date-range-picker").val("");
+      // updateUrlParameters(); // Update URL again if filters are reset
+
       fetchTimeData(selectedBoardId);
     } catch (error) {
       console.error("Error in boardSelect change listener:", error);
@@ -582,8 +666,12 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
       const selectedBoardId = boardSelectElement.value;
-      if (selectedBoardId) fetchTimeData(selectedBoardId);
-      else alert("Please select a board first.");
+      if (selectedBoardId) {
+        updateUrlParameters(); // Update URL before fetching
+        fetchTimeData(selectedBoardId);
+      } else {
+        alert("Please select a board first.");
+      }
     } catch (error) {
       console.error("Error in applyFiltersButton click listener:", error);
       alert(
@@ -621,6 +709,6 @@ document.addEventListener("DOMContentLoaded", () => {
   // --- Initial Load ---
   // Removed assignment of chart element references
 
-  fetchBoards();
+  fetchBoards(); // Fetches boards, and *if* initialBoardId exists, it triggers fetchTimeData inside fetchBoards' success handler.
   // No initial tab switch needed
 });
