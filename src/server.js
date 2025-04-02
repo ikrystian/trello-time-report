@@ -70,7 +70,7 @@ app.get("/api/boards", async (req, res) => {
     );
     res
       .status(error.response?.status || 500)
-      .json({ message: "Failed to fetch Trello boards" });
+      .json({ message: "Nie udało się pobrać tablic Trello" });
   }
 });
 
@@ -262,7 +262,7 @@ app.get("/api/boards/:boardId/time-data", async (req, res) => {
     );
     res
       .status(error.response?.status || 500)
-      .json({ message: "Failed to fetch time data" });
+      .json({ message: "Nie udało się pobrać danych czasu" });
   }
 });
 

@@ -20,7 +20,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const container = document.getElementById("time-entries-container");
     if (container) {
       container.innerHTML =
-        "<p style='color: red;'>Error: Admin panel failed to initialize correctly. Control elements missing.</p>";
+        "<p style='color: red;'>Błąd: Panel administratora nie zainicjował się poprawnie. Brak elementów kontrolnych.</p>";
     }
     return;
   }
@@ -112,7 +112,7 @@ document.addEventListener("DOMContentLoaded", () => {
         throw new Error(`HTTP error! status: ${response.status}`);
       const boards = await response.json();
       boardSelectElement.innerHTML =
-        '<option value="">-- Select a Board --</option>';
+        '<option value="">-- Wybierz Tablicę --</option>';
       boards.forEach((board) => {
         const option = document.createElement("option");
         option.value = board.id;
@@ -139,7 +139,7 @@ document.addEventListener("DOMContentLoaded", () => {
       console.error("Error fetching boards:", error);
       if (boardSelectElement)
         boardSelectElement.innerHTML =
-          '<option value="">Error loading boards</option>';
+          '<option value="">Błąd ładowania tablic</option>';
     }
   }
 
@@ -177,7 +177,7 @@ document.addEventListener("DOMContentLoaded", () => {
       currentFetchedTimeData = []; // Clear data if no board selected
       if (timeEntriesContainer)
         timeEntriesContainer.innerHTML =
-          "<p>Select a board to view time entries.</p>";
+          "<p>Wybierz tablicę, aby wyświetlić wpisy czasu.</p>";
       if (filtersDiv) filtersDiv.style.display = "none";
       if (summaryDiv) summaryDiv.style.display = "none";
       if (summaryContent) summaryContent.innerHTML = "";
@@ -253,10 +253,11 @@ document.addEventListener("DOMContentLoaded", () => {
       console.error(`Error fetching time data for board ${boardId}:`, error);
       currentFetchedTimeData = []; // Clear data on error
       if (timeEntriesContainer)
-        timeEntriesContainer.innerHTML = `<p>Error loading time data. ${error.message}</p>`;
+        timeEntriesContainer.innerHTML = `<p>Błąd ładowania danych czasu. ${error.message}</p>`;
       clearCharts(); // Clear charts on error
       if (chartsContainer)
-        chartsContainer.innerHTML = "<p>Error loading data for charts.</p>";
+        chartsContainer.innerHTML =
+          "<p>Błąd ładowania danych dla wykresów.</p>";
     } finally {
       if (loadingIndicator) loadingIndicator.style.display = "none";
       if (chartsLoadingIndicator) chartsLoadingIndicator.style.display = "none"; // Hide chart loader too
@@ -272,7 +273,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (!cardDataArray || cardDataArray.length === 0) {
       timeEntriesContainer.innerHTML =
-        "<p>No cards with time entries or estimates found (or matching filters).</p>";
+        "<p>Nie znaleziono kart z wpisami czasu lub estymacjami (lub pasujących do filtrów).</p>";
       return;
     }
 
@@ -280,7 +281,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const listId = card.listId || "unknown-list";
       if (!acc[listId]) {
         acc[listId] = {
-          listName: listMap[listId] || "Unknown List",
+          listName: listMap[listId] || "Nieznana Lista",
           cards: [],
           totalReportedHours: 0,
           totalEstimatedHours: 0,
@@ -334,9 +335,9 @@ document.addEventListener("DOMContentLoaded", () => {
             card.cardName
           }</span> <a href="${
             card.cardUrl
-          }" target="_blank" class="card-trello-link" title="Open card in Trello">🔗</a> <span class="card-hours">(Est: ${formatHours(
-            card.estimatedHours || 0
-          )}h / Rep: ${formatHours(card.totalReportedHours)}h)</span>`;
+          }" target="_blank" class="card-trello-link" title="Otwórz kartę w Trello">🔗</a> <span class="card-hours">(Szac: ${formatHours(
+            card.estimatedHours || 0 // Changed Est: to Szac:
+          )}h / Rap: ${formatHours(card.totalReportedHours)}h)</span>`; // Changed Rep: to Rap:
           cardDetails.appendChild(cardSummary);
 
           const entriesDiv = document.createElement("div");
@@ -346,7 +347,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
           const headerDiv = document.createElement("div");
           headerDiv.classList.add("entry-item", "entry-header");
-          headerDiv.innerHTML = `<span>User</span> <span>Date</span> <span>Hours</span> <span>Comment</span>`;
+          headerDiv.innerHTML = `<span>Użytkownik</span> <span>Data</span> <span>Godziny</span> <span>Komentarz</span>`;
           entriesDiv.appendChild(headerDiv);
 
           // Sort and display entries (we know timeEntries.length > 0 because totalReportedHours > 0)
@@ -357,10 +358,10 @@ document.addEventListener("DOMContentLoaded", () => {
             entryDiv.classList.add("entry-item");
             const userName = entry.memberId
               ? memberMap[entry.memberId] || entry.memberId
-              : "N/A";
+              : "B/D"; // B/D = Brak Danych (N/A)
             const dateStr = entry.date
               ? new Date(entry.date).toLocaleDateString()
-              : "N/A";
+              : "B/D"; // B/D = Brak Danych (N/A)
             const hoursStr = formatHours(entry.hours);
             const commentStr = entry.comment || "";
             entryDiv.innerHTML = `<span>${userName}</span> <span>${dateStr}</span> <span>${hoursStr}</span> <span>${commentStr}</span>`;
@@ -381,30 +382,29 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function exportToCSV() {
     if (!currentFetchedTimeData || currentFetchedTimeData.length === 0) {
-      alert(
-        "No data available to export. Please select a board and apply filters."
-      );
+      alert("Brak danych do eksportu. Wybierz tablicę i zastosuj filtry.");
       return;
     }
 
     const boardSelectElement = document.getElementById("board-select");
     const boardName = boardSelectElement
       ? boardSelectElement.options[boardSelectElement.selectedIndex].text
-      : "UnknownBoard";
-    const filename = `trello_time_report_${boardName.replace(
+      : "NieznanaTablica";
+    const filename = `raport_czasu_trello_${boardName.replace(
+      // Changed prefix
       /[^a-z0-9]/gi,
       "_"
     )}_${new Date().toISOString().split("T")[0]}.csv`;
 
     const headers = [
-      "List Name",
-      "Card Name",
-      "Card URL",
-      "Estimated Hours (Card)",
-      "User",
-      "Date",
-      "Reported Hours (Entry)",
-      "Comment",
+      "Nazwa Listy",
+      "Nazwa Karty",
+      "URL Karty",
+      "Szacowane Godziny (Karta)",
+      "Użytkownik",
+      "Data",
+      "Zaraportowane Godziny (Wpis)",
+      "Komentarz",
     ];
     let csvContent = "data:text/csv;charset=utf-8,";
     csvContent +=
@@ -425,17 +425,18 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     currentFetchedTimeData.forEach((card) => {
-      const listName = currentListMap[card.listId] || "Unknown List";
-      const cardName = card.cardName || "Unnamed Card";
+      const listName = currentListMap[card.listId] || "Nieznana Lista";
+      const cardName = card.cardName || "Nienazwana Karta";
       const cardUrl = card.cardUrl || "";
       const estimatedHours = formatHours(card.estimatedHours || 0);
 
       if (card.timeEntries && card.timeEntries.length > 0) {
         card.timeEntries.forEach((entry) => {
-          const userName = currentMemberMap[entry.memberId] || "Unknown User";
+          const userName =
+            currentMemberMap[entry.memberId] || "Nieznany Użytkownik";
           const dateStr = entry.date
             ? new Date(entry.date).toLocaleDateString()
-            : "N/A";
+            : "B/D"; // B/D = Brak Danych (N/A)
           const reportedHours = formatHours(entry.hours || 0);
           const comment = entry.comment || "";
           const row = [
@@ -456,10 +457,10 @@ document.addEventListener("DOMContentLoaded", () => {
           cardName,
           cardUrl,
           estimatedHours,
-          "N/A",
-          "N/A",
+          "B/D", // B/D = Brak Danych (N/A)
+          "B/D", // B/D = Brak Danych (N/A)
           "0",
-          "(No time entries reported)",
+          "(Brak zaraportowanych wpisów czasu)",
         ];
         csvContent += row.map(escapeCsv).join(",") + "\r\n";
       }
@@ -490,7 +491,7 @@ document.addEventListener("DOMContentLoaded", () => {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
       });
       // Reset message if needed, handled elsewhere currently
-      // chartsContainer.innerHTML = '<p>Select a board and apply filters to view charts.</p>';
+      // chartsContainer.innerHTML = '<p>Wybierz tablicę i zastosuj filtry, aby wyświetlić wykresy.</p>';
     }
   }
 
@@ -500,14 +501,15 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!currentFetchedTimeData || currentFetchedTimeData.length === 0) {
       if (chartsContainer)
         chartsContainer.innerHTML =
-          "<p>No data available to display charts.</p>";
+          "<p>Brak danych do wyświetlenia wykresów.</p>";
       return;
     }
     // Removed check for dailyHoursChartCtx
     if (!userHoursChartCtx || !listHoursChartCtx) {
       console.error("Chart contexts not initialized.");
       if (chartsContainer)
-        chartsContainer.innerHTML = "<p>Chart elements failed to load.</p>";
+        chartsContainer.innerHTML =
+          "<p>Nie udało się załadować elementów wykresu.</p>";
       return;
     }
     if (chartsLoadingIndicator) chartsLoadingIndicator.style.display = "block"; // Show loading indicator
@@ -516,11 +518,11 @@ document.addEventListener("DOMContentLoaded", () => {
     if (chartsContainer && chartsContainer.querySelector("p")) {
       chartsContainer.innerHTML = `
             <div class="chart-wrapper" style="width: 45%; min-width: 300px;">
-                <h3>Hours per User</h3>
+                <h3>Godziny na Użytkownika</h3>
                 <canvas id="userHoursChart"></canvas>
             </div>
             <div class="chart-wrapper" style="width: 45%; min-width: 300px;">
-                <h3>Hours per List</h3>
+                <h3>Godziny na Listę</h3>
                 <canvas id="listHoursChart"></canvas>
             </div>
             `; // Removed daily chart wrapper
@@ -550,7 +552,7 @@ document.addEventListener("DOMContentLoaded", () => {
     } catch (error) {
       console.error("Error rendering charts:", error);
       if (chartsContainer)
-        chartsContainer.innerHTML = `<p>An error occurred while rendering charts: ${error.message}</p>`;
+        chartsContainer.innerHTML = `<p>Wystąpił błąd podczas renderowania wykresów: ${error.message}</p>`;
     } finally {
       if (chartsLoadingIndicator) chartsLoadingIndicator.style.display = "none"; // Hide loading indicator
     }
@@ -560,7 +562,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const hoursByUser = currentFetchedTimeData.reduce((acc, card) => {
       card.timeEntries.forEach((entry) => {
         const userId = entry.memberId || "unknown";
-        const userName = currentMemberMap[userId] || "Unknown User";
+        const userName = currentMemberMap[userId] || "Nieznany Użytkownik";
         acc[userName] = (acc[userName] || 0) + (entry.hours || 0);
       });
       return acc;
@@ -578,7 +580,7 @@ document.addEventListener("DOMContentLoaded", () => {
         labels: labels,
         datasets: [
           {
-            label: "Reported Hours",
+            label: "Zaraportowane Godziny",
             data: data,
             backgroundColor: "rgba(54, 162, 235, 0.6)", // Example color
             borderColor: "rgba(54, 162, 235, 1)",
@@ -599,7 +601,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function renderListHoursChart() {
     const hoursByList = currentFetchedTimeData.reduce((acc, card) => {
       const listId = card.listId || "unknown";
-      const listName = currentListMap[listId] || "Unknown List";
+      const listName = currentListMap[listId] || "Nieznana Lista";
       const listHours = card.timeEntries.reduce(
         (sum, entry) => sum + (entry.hours || 0),
         0
@@ -623,7 +625,7 @@ document.addEventListener("DOMContentLoaded", () => {
         labels: labels,
         datasets: [
           {
-            label: "Reported Hours",
+            label: "Zaraportowane Godziny",
             data: data,
             backgroundColor: [
               // Example colors
@@ -658,7 +660,8 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     try {
       const currentVal = userSelectElement.value;
-      userSelectElement.innerHTML = '<option value="">All Users</option>';
+      userSelectElement.innerHTML =
+        '<option value="">Wszyscy Użytkownicy</option>';
       const sortedMembers = Object.entries(memberMap).sort(
         ([, nameA], [, nameB]) => nameA.localeCompare(nameB)
       );
@@ -692,19 +695,20 @@ document.addEventListener("DOMContentLoaded", () => {
         boardLabels
       );
       labelSelectElement.innerHTML =
-        '<option value="">Error loading labels</option>';
+        '<option value="">Błąd ładowania etykiet</option>';
       return;
     }
     try {
       const currentVal = labelSelectElement.value;
-      labelSelectElement.innerHTML = '<option value="">All Labels</option>';
+      labelSelectElement.innerHTML =
+        '<option value="">Wszystkie Etykiety</option>';
       boardLabels.sort((a, b) =>
         a.name.localeCompare(b.name, undefined, { sensitivity: "base" })
       );
       boardLabels.forEach((label) => {
         const option = document.createElement("option");
         option.value = label.id;
-        option.textContent = label.name || `(No Name - ${label.color})`;
+        option.textContent = label.name || `(Brak Nazwy - ${label.color})`;
         labelSelectElement.appendChild(option);
       });
       // Set value based on parameter or previously selected value
@@ -715,7 +719,7 @@ document.addEventListener("DOMContentLoaded", () => {
     } catch (error) {
       console.error("Error populating label filter:", error);
       labelSelectElement.innerHTML =
-        '<option value="">Error loading labels</option>';
+        '<option value="">Błąd ładowania etykiet</option>';
     }
   }
 
@@ -726,16 +730,33 @@ document.addEventListener("DOMContentLoaded", () => {
       autoUpdateInput: false, // Set to false: Input field is empty initially
       locale: {
         format: "YYYY-MM-DD",
-        cancelLabel: "Clear",
-        applyLabel: "Apply",
+        cancelLabel: "Wyczyść",
+        applyLabel: "Zastosuj",
+        daysOfWeek: ["Nd", "Pn", "Wt", "Śr", "Cz", "Pt", "So"], // Added Polish days
+        monthNames: [
+          // Added Polish months
+          "Styczeń",
+          "Luty",
+          "Marzec",
+          "Kwiecień",
+          "Maj",
+          "Czerwiec",
+          "Lipiec",
+          "Sierpień",
+          "Wrzesień",
+          "Październik",
+          "Listopad",
+          "Grudzień",
+        ],
+        firstDay: 1, // Monday is the first day
       },
       ranges: {
-        Today: [moment(), moment()],
-        Yesterday: [moment().subtract(1, "days"), moment().subtract(1, "days")],
-        "Last 7 Days": [moment().subtract(6, "days"), moment()],
-        "Last 30 Days": [moment().subtract(29, "days"), moment()],
-        "This Month": [moment().startOf("month"), moment().endOf("month")],
-        "Last Month": [
+        Dzisiaj: [moment(), moment()],
+        Wczoraj: [moment().subtract(1, "days"), moment().subtract(1, "days")],
+        "Ostatnie 7 Dni": [moment().subtract(6, "days"), moment()],
+        "Ostatnie 30 Dni": [moment().subtract(29, "days"), moment()],
+        "Ten Miesiąc": [moment().startOf("month"), moment().endOf("month")],
+        "Ostatni Miesiąc": [
           moment().subtract(1, "month").startOf("month"),
           moment().subtract(1, "month").endOf("month"),
         ],
@@ -808,7 +829,7 @@ document.addEventListener("DOMContentLoaded", () => {
     );
     const dateRangeInput = document.getElementById("date-range-picker");
     if (dateRangeInput) {
-      dateRangeInput.placeholder = "Date picker failed to load";
+      dateRangeInput.placeholder = "Nie udało się załadować wyboru daty";
       dateRangeInput.disabled = true;
     }
   }
@@ -826,7 +847,7 @@ document.addEventListener("DOMContentLoaded", () => {
       );
       if (timeEntriesContainerElement)
         timeEntriesContainerElement.innerHTML =
-          "<p>Select a board to view time entries.</p>";
+          "<p>Wybierz tablicę, aby wyświetlić wpisy czasu.</p>";
       else
         console.error(
           "Could not find timeEntriesContainerElement in change listener."
@@ -835,7 +856,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (chartsContainer)
         // Reset chart container message
         chartsContainer.innerHTML =
-          "<p>Select a board and apply filters to view charts.</p>";
+          "<p>Wybierz tablicę i zastosuj filtry, aby wyświetlić wykresy.</p>";
 
       // Reset date picker to empty when board changes
       if (
@@ -875,7 +896,7 @@ document.addEventListener("DOMContentLoaded", () => {
         console.error(
           "Apply Filters Error: Could not find board select element."
         );
-        alert("Error: Board selection not found.");
+        alert("Błąd: Nie znaleziono wyboru tablicy.");
         return;
       }
       const selectedBoardId = boardSelectElement.value;
@@ -883,13 +904,11 @@ document.addEventListener("DOMContentLoaded", () => {
         updateUrlParameters(); // Update URL before fetching
         fetchTimeData(selectedBoardId);
       } else {
-        alert("Please select a board first.");
+        alert("Proszę najpierw wybrać tablicę.");
       }
     } catch (error) {
       console.error("Error in applyFiltersButton click listener:", error);
-      alert(
-        "An error occurred while applying filters. Please check the console."
-      );
+      alert("Wystąpił błąd podczas stosowania filtrów. Sprawdź konsolę.");
     }
   });
 
@@ -913,7 +932,9 @@ document.addEventListener("DOMContentLoaded", () => {
       allDetails.forEach((detail) => {
         detail.open = shouldOpen;
       });
-      toggleAllButton.textContent = shouldOpen ? "Collapse All" : "Expand All";
+      toggleAllButton.textContent = shouldOpen
+        ? "Zwiń Wszystkie"
+        : "Rozwiń Wszystkie";
     });
   } else {
     console.warn("Toggle all button not found.");

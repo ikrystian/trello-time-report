@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trello Time Report Panel</title>
+    <title>Panel Raportów Czasu Trello</title>
     <!-- daterangepicker dependencies -->
     <script type="text/javascript" src="https://cdn.jsdelivr.net/jquery/latest/jquery.min.js"></script>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
@@ -15,21 +15,21 @@
     <link rel="stylesheet" href="admin.css">
 </head>
 <body>
-    <h1>Admin Panel</h1>
+    <h1>Panel Administratora</h1>
 
     <!-- Tab Navigation -->
     <div class="tab-nav">
-        <button class="tab-button active" data-tab="report-tab">Time Report</button>
-        <button class="tab-button" data-tab="charts-tab">Charts</button>
+        <button class="tab-button active" data-tab="report-tab">Raport Czasu</button>
+        <button class="tab-button" data-tab="charts-tab">Wykresy</button>
     </div>
 
     <!-- Tab Content -->
     <div id="report-tab" class="tab-content active">
         <div class="controls">
             <div>
-                <label for="board-select">Select Board:</label>
+                <label for="board-select">Wybierz Tablicę:</label>
             <select id="board-select" name="board">
-                <option value="">Loading boards...</option>
+                <option value="">Ładowanie tablic...</option>
             </select>
         </div>
 
@@ -37,57 +37,57 @@
         <div class="filters" style="display: none;">
              <!-- Date Range Picker Input -->
               <div>
-             <label for="date-range-picker">Date Range:</label>
-             <input type="text" id="date-range-picker" placeholder="Select Date Range" style="width: 220px;"/> <!-- Added style for width -->
+             <label for="date-range-picker">Zakres Dat:</label>
+             <input type="text" id="date-range-picker" placeholder="Wybierz Zakres Dat" style="width: 220px;"/> <!-- Added style for width -->
             </div>
              <!-- User Filter -->
               <div>
-             <label for="user-select">User:</label>
-             <select id="user-select"><option value="">All Users</option></select>
+             <label for="user-select">Użytkownik:</label>
+             <select id="user-select"><option value="">Wszyscy Użytkownicy</option></select>
             </div>
             <div>
              <!-- Label Filter -->
-             <label for="label-select">Label:</label>
-             <select id="label-select"><option value="">All Labels</option></select>
+             <label for="label-select">Etykieta:</label>
+             <select id="label-select"><option value="">Wszystkie Etykiety</option></select>
 
             </div>
-             <button id="apply-filters">Apply Filters</button>
-             <button id="export-csv" style="margin-left: 10px;">Export to CSV</button> <!-- Add Export Button -->
+             <button id="apply-filters">Zastosuj Filtry</button>
+             <button id="export-csv" style="margin-left: 10px;">Eksportuj do CSV</button> <!-- Add Export Button -->
             </div>
         </div>
 
         <div class="summary" style="margin-top: 20px; display: none;">
-            <h2>Summary</h2>
+            <h2>Podsumowanie</h2>
             <div id="summary-content">
                 <!-- Summary data will be populated here -->
             </div>
         </div>
 
         <div class="data-display" style="margin-top: 20px;">
-            <button id="toggle-all-details" style="margin-left: 10px; font-size: 0.8em; padding: 3px 6px;">Expand All</button>
+            <button id="toggle-all-details" style="margin-left: 10px; font-size: 0.8em; padding: 3px 6px;">Rozwiń Wszystkie</button>
             <!-- Replace table with a div container for collapsible groups -->
             <div id="time-entries-container">
-                 <p>Select a board to view time entries.</p>
+                 <p>Wybierz tablicę, aby wyświetlić wpisy czasu.</p>
             </div>
-            <div id="loading-indicator" style="display: none;">Loading data...</div>
+            <div id="loading-indicator" style="display: none;">Ładowanie danych...</div>
         </div>
     </div>
 
     <div id="charts-tab" class="tab-content">
-        <h2>Charts</h2>
-        <p>Select a board and apply filters to view charts.</p>
+        <h2>Wykresy</h2>
+        <p>Wybierz tablicę i zastosuj filtry, aby wyświetlić wykresy.</p>
         <div id="charts-container" style="display: flex; flex-wrap: wrap; gap: 20px;">
             <div class="chart-wrapper" style="width: 45%; min-width: 300px;">
-                <h3>Hours per User</h3>
+                <h3>Godziny na Użytkownika</h3>
                 <canvas id="userHoursChart"></canvas>
             </div>
             <div class="chart-wrapper" style="width: 45%; min-width: 300px;">
-                 <h3>Hours per List</h3>
+                 <h3>Godziny na Listę</h3>
                  <canvas id="listHoursChart"></canvas>
              </div>
              <!-- Add more chart canvases here as needed -->
          </div>
-         <div id="charts-loading-indicator" style="display: none;">Loading chart data...</div>
+         <div id="charts-loading-indicator" style="display: none;">Ładowanie danych wykresów...</div>
     </div>
 
     <!-- App JS (after dependencies) -->
