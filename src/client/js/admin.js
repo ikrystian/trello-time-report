@@ -17,18 +17,22 @@ document.addEventListener("DOMContentLoaded", () => {
     return;
   }
 
+  // --- State Variables ---
   let currentListMap = {};
   let currentMemberMap = {};
+  let currentFetchedTimeData = []; // Store the raw data for export
+
+  // --- DOM References (Declare here, assign after DOM is ready) ---
+  // Chart-related references removed
+
+  // --- Helper Functions ---
 
   // Helper function to format hours (e.g., 8.5, 8, not 8.50 or 8.00)
   function formatHours(hours) {
     const num = Number(hours) || 0; // Ensure it's a number, default to 0
-    // Check if the number is effectively an integer (accounting for potential floating point inaccuracies)
     if (Math.abs(num - Math.round(num)) < 0.001) {
       return num.toString(); // Return as integer string
     } else {
-      // Round to one decimal place and convert to string
-      // Use parseFloat to remove trailing zeros like .0 if toFixed(1) adds them
       return parseFloat(num.toFixed(1)).toString();
     }
   }
@@ -39,33 +43,29 @@ document.addEventListener("DOMContentLoaded", () => {
       console.error("fetchBoards: boardSelectElement not found.");
       return;
     }
-
     try {
       const response = await fetch("/api/boards");
-      if (!response.ok) {
+      if (!response.ok)
         throw new Error(`HTTP error! status: ${response.status}`);
-      }
       const boards = await response.json();
-      if (boardSelectElement) {
-        boardSelectElement.innerHTML =
-          '<option value="">-- Select a Board --</option>';
-        boards.forEach((board) => {
-          const option = document.createElement("option");
-          option.value = board.id;
-          option.textContent = board.name;
-          boardSelectElement.appendChild(option);
-        });
-      }
+      boardSelectElement.innerHTML =
+        '<option value="">-- Select a Board --</option>';
+      boards.forEach((board) => {
+        const option = document.createElement("option");
+        option.value = board.id;
+        option.textContent = board.name;
+        boardSelectElement.appendChild(option);
+      });
     } catch (error) {
       console.error("Error fetching boards:", error);
-      if (boardSelectElement) {
+      if (boardSelectElement)
         boardSelectElement.innerHTML =
           '<option value="">Error loading boards</option>';
-      }
     }
   }
 
   async function fetchTimeData(boardId) {
+    // Get references needed for this function
     const timeEntriesContainer = document.getElementById(
       "time-entries-container"
     );
@@ -73,9 +73,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const filtersDiv = document.querySelector(".filters");
     const summaryDiv = document.querySelector(".summary");
     const summaryContent = document.getElementById("summary-content");
-    const dateRangePickerInput = $("#date-range-picker"); // Get jQuery object for picker
+    const dateRangePickerInput = $("#date-range-picker");
     const userSelectElementForValue = document.getElementById("user-select");
-    const labelSelectElementForValue = document.getElementById("label-select"); // Get label select
+    const labelSelectElementForValue = document.getElementById("label-select");
 
     // Check if essential elements exist
     if (
@@ -84,30 +84,25 @@ document.addEventListener("DOMContentLoaded", () => {
       !filtersDiv ||
       !summaryDiv ||
       !summaryContent ||
-      !dateRangePickerInput.length || // Check if picker input exists via jQuery length
+      !dateRangePickerInput.length ||
       !userSelectElementForValue ||
       !labelSelectElementForValue
     ) {
       console.error(
         "Error fetching time data: One or more display/filter elements are missing."
       );
-      // Optionally provide more specific feedback to the user or log which element is missing
-      if (!dateRangePickerInput.length)
-        console.error("Date Range Picker input not found.");
-      if (!userSelectElementForValue)
-        console.error("User select input not found.");
-      if (!labelSelectElementForValue)
-        console.error("Label select input not found.");
       return;
     }
 
     if (!boardId) {
+      currentFetchedTimeData = []; // Clear data if no board selected
       if (timeEntriesContainer)
         timeEntriesContainer.innerHTML =
           "<p>Select a board to view time entries.</p>";
       if (filtersDiv) filtersDiv.style.display = "none";
       if (summaryDiv) summaryDiv.style.display = "none";
       if (summaryContent) summaryContent.innerHTML = "";
+      // No need to clear charts
       return;
     }
 
@@ -116,32 +111,24 @@ document.addEventListener("DOMContentLoaded", () => {
     if (filtersDiv) filtersDiv.style.display = "block";
     if (summaryDiv) summaryDiv.style.display = "none";
     if (summaryContent) summaryContent.innerHTML = "";
+    // No need to clear charts
 
     // Get dates from daterangepicker instance
     const pickerData = dateRangePickerInput.data("daterangepicker");
-    // Ensure pickerData exists and has valid dates before formatting
-    const startDate =
-      pickerData && pickerData.startDate && pickerData.startDate.isValid()
-        ? pickerData.startDate.format("YYYY-MM-DD")
-        : null;
-    const endDate =
-      pickerData && pickerData.endDate && pickerData.endDate.isValid()
-        ? pickerData.endDate.format("YYYY-MM-DD")
-        : null;
-
-    const selectedUserId = userSelectElementForValue
-      ? userSelectElementForValue.value
+    const startDate = pickerData?.startDate?.isValid()
+      ? pickerData.startDate.format("YYYY-MM-DD")
       : null;
-    const selectedLabelId = labelSelectElementForValue // Get selected label ID
-      ? labelSelectElementForValue.value
+    const endDate = pickerData?.endDate?.isValid()
+      ? pickerData.endDate.format("YYYY-MM-DD")
       : null;
+    const selectedUserId = userSelectElementForValue?.value;
+    const selectedLabelId = labelSelectElementForValue?.value;
 
     const queryParams = new URLSearchParams();
-    // Only add date params if they are valid
     if (startDate) queryParams.append("startDate", startDate);
     if (endDate) queryParams.append("endDate", endDate);
     if (selectedUserId) queryParams.append("userId", selectedUserId);
-    if (selectedLabelId) queryParams.append("labelId", selectedLabelId); // Add labelId to query
+    if (selectedLabelId) queryParams.append("labelId", selectedLabelId);
 
     const queryString = queryParams.toString();
     const apiUrl = `/api/boards/${boardId}/time-data${
@@ -150,25 +137,28 @@ document.addEventListener("DOMContentLoaded", () => {
 
     try {
       const response = await fetch(apiUrl);
-      if (!response.ok) {
+      if (!response.ok)
         throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      // Destructure boardLabels from response
       const { timeData, listMap, memberMap, boardLabels } =
         await response.json();
 
       currentListMap = listMap;
       currentMemberMap = memberMap;
-      // Note: boardLabels are now available here
+      currentFetchedTimeData = timeData; // Store fetched data
 
-      displayTimeEntries(timeData, currentListMap, currentMemberMap);
+      displayTimeEntries(
+        currentFetchedTimeData,
+        currentListMap,
+        currentMemberMap
+      );
       populateUserFilter(currentMemberMap);
-      populateLabelFilter(boardLabels); // Populate label filter
+      populateLabelFilter(boardLabels);
+      // renderCharts(); // Removed chart rendering call
     } catch (error) {
       console.error(`Error fetching time data for board ${boardId}:`, error);
-      if (timeEntriesContainer) {
+      currentFetchedTimeData = []; // Clear data on error
+      if (timeEntriesContainer)
         timeEntriesContainer.innerHTML = `<p>Error loading time data. ${error.message}</p>`;
-      }
     } finally {
       if (loadingIndicator) loadingIndicator.style.display = "none";
     }
@@ -179,7 +169,6 @@ document.addEventListener("DOMContentLoaded", () => {
       "time-entries-container"
     );
     if (!timeEntriesContainer) return;
-    // Ensure container is cleared here, before adding new content
     timeEntriesContainer.innerHTML = "";
 
     if (!cardDataArray || cardDataArray.length === 0) {
@@ -189,7 +178,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     const groupedByList = cardDataArray.reduce((acc, card) => {
-      console.log(card);
       const listId = card.listId || "unknown-list";
       if (!acc[listId]) {
         acc[listId] = {
@@ -200,7 +188,7 @@ document.addEventListener("DOMContentLoaded", () => {
         };
       }
       const cardReportedHours = card.timeEntries.reduce(
-        (sum, entry) => sum + entry.hours,
+        (sum, entry) => sum + (entry.hours || 0),
         0
       );
       card.totalReportedHours = cardReportedHours;
@@ -221,11 +209,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const listSummary = document.createElement("summary");
       listSummary.classList.add("list-summary");
-      listSummary.innerHTML = `
-        <span class="list-name">${listGroup.listName}</span>
-        <span class="list-hours">(Est: ${formatHours(
-          listGroup.totalEstimatedHours
-        )}h / Rep: ${formatHours(listGroup.totalReportedHours)}h)</span>`;
+      listSummary.innerHTML = `<span class="list-name">${
+        listGroup.listName
+      }</span> <span class="list-hours">(Est: ${formatHours(
+        listGroup.totalEstimatedHours
+      )}h / Rep: ${formatHours(listGroup.totalReportedHours)}h)</span>`;
       listDetails.appendChild(listSummary);
 
       const cardsContainer = document.createElement("div");
@@ -237,57 +225,38 @@ document.addEventListener("DOMContentLoaded", () => {
       listGroup.cards.forEach((card) => {
         const cardDetails = document.createElement("details");
         cardDetails.classList.add("card-group-details");
+        cardDetails.open = card.timeEntries.length > 0;
 
         const cardSummary = document.createElement("summary");
-        // Add the Trello link here
-        cardSummary.innerHTML = `
-          <span class="card-name">${card.cardName}</span>
-          <a href="${
-            card.cardUrl
-          }" target="_blank" class="card-trello-link" title="Open card in Trello">🔗</a>
-          <span class="card-hours">(Est: ${formatHours(
-            card.estimatedHours || 0
-          )}h / Rep: ${formatHours(card.totalReportedHours)}h)</span>`;
+        cardSummary.innerHTML = `<span class="card-name">${
+          card.cardName
+        }</span> <a href="${
+          card.cardUrl
+        }" target="_blank" class="card-trello-link" title="Open card in Trello">🔗</a> <span class="card-hours">(Est: ${formatHours(
+          card.estimatedHours || 0
+        )}h / Rep: ${formatHours(card.totalReportedHours)}h)</span>`;
         cardDetails.appendChild(cardSummary);
 
         const entriesDiv = document.createElement("div");
         entriesDiv.classList.add("card-entries-list");
 
-        // --- Add Estimated Time Row ---
         const estimatedTimeDiv = document.createElement("div");
-        estimatedTimeDiv.classList.add("entry-item", "entry-estimated"); // Add a class for styling
-        estimatedTimeDiv.innerHTML = `
-          <span style="font-weight: bold;">Total Estimated:</span>
-          <span></span> <!-- Placeholder for date -->
-          <span style="font-weight: bold;">${formatHours(
-            card.estimatedHours || 0
-          )}h</span>
-          <span></span> <!-- Placeholder for comment -->
-         `;
+        estimatedTimeDiv.classList.add("entry-item", "entry-estimated");
+        estimatedTimeDiv.innerHTML = `<span style="font-weight: bold;">Total Estimated:</span> <span></span> <span style="font-weight: bold;">${formatHours(
+          card.estimatedHours || 0
+        )}h</span> <span></span>`;
         entriesDiv.appendChild(estimatedTimeDiv);
-        // --- End Estimated Time Row ---
 
-        // --- Add Total Reported Time Row ---
         const reportedTimeDiv = document.createElement("div");
-        reportedTimeDiv.classList.add("entry-item", "entry-reported-total"); // Add a class for styling
-        reportedTimeDiv.innerHTML = `
-           <span style="font-weight: bold;">Total Reported:</span>
-           <span></span> <!-- Placeholder for date -->
-           <span style="font-weight: bold;">${formatHours(
-             card.totalReportedHours
-           )}h</span>
-           <span></span> <!-- Placeholder for comment -->
-         `;
+        reportedTimeDiv.classList.add("entry-item", "entry-reported-total");
+        reportedTimeDiv.innerHTML = `<span style="font-weight: bold;">Total Reported:</span> <span></span> <span style="font-weight: bold;">${formatHours(
+          card.totalReportedHours
+        )}h</span> <span></span>`;
         entriesDiv.appendChild(reportedTimeDiv);
-        // --- End Total Reported Time Row ---
 
         const headerDiv = document.createElement("div");
         headerDiv.classList.add("entry-item", "entry-header");
-        headerDiv.innerHTML = `
-          <span>User</span>
-          <span>Date</span>
-          <span>Hours</span>
-          <span>Comment</span>`;
+        headerDiv.innerHTML = `<span>User</span> <span>Date</span> <span>Hours</span> <span>Comment</span>`;
         entriesDiv.appendChild(headerDiv);
 
         card.timeEntries.sort((a, b) => new Date(b.date) - new Date(a.date));
@@ -302,13 +271,9 @@ document.addEventListener("DOMContentLoaded", () => {
             const dateStr = entry.date
               ? new Date(entry.date).toLocaleDateString()
               : "N/A";
-            const hoursStr = formatHours(entry.hours); // Use helper function
+            const hoursStr = formatHours(entry.hours);
             const commentStr = entry.comment || "";
-            entryDiv.innerHTML = `
-              <span>${userName}</span>
-              <span>${dateStr}</span>
-              <span>${hoursStr}</span>
-              <span>${commentStr}</span>`;
+            entryDiv.innerHTML = `<span>${userName}</span> <span>${dateStr}</span> <span>${hoursStr}</span> <span>${commentStr}</span>`;
             entriesDiv.appendChild(entryDiv);
           });
         } else {
@@ -321,16 +286,106 @@ document.addEventListener("DOMContentLoaded", () => {
         cardDetails.appendChild(entriesDiv);
         cardsContainer.appendChild(cardDetails);
       });
-      if (timeEntriesContainer) {
-        timeEntriesContainer.appendChild(listDetails);
-      }
+      timeEntriesContainer.appendChild(listDetails);
     });
   }
 
   function exportToCSV() {
-    alert("Export function needs update for the new data structure.");
-    return;
+    if (!currentFetchedTimeData || currentFetchedTimeData.length === 0) {
+      alert(
+        "No data available to export. Please select a board and apply filters."
+      );
+      return;
+    }
+
+    const boardSelectElement = document.getElementById("board-select");
+    const boardName = boardSelectElement
+      ? boardSelectElement.options[boardSelectElement.selectedIndex].text
+      : "UnknownBoard";
+    const filename = `trello_time_report_${boardName.replace(
+      /[^a-z0-9]/gi,
+      "_"
+    )}_${new Date().toISOString().split("T")[0]}.csv`;
+
+    const headers = [
+      "List Name",
+      "Card Name",
+      "Card URL",
+      "Estimated Hours (Card)",
+      "User",
+      "Date",
+      "Reported Hours (Entry)",
+      "Comment",
+    ];
+    let csvContent = "data:text/csv;charset=utf-8,";
+    csvContent +=
+      headers.map((header) => `"${header.replace(/"/g, '""')}"`).join(",") +
+      "\r\n";
+
+    const escapeCsv = (field) => {
+      if (field === null || field === undefined) return '""';
+      const stringField = String(field);
+      if (
+        stringField.includes(",") ||
+        stringField.includes("\n") ||
+        stringField.includes('"')
+      ) {
+        return `"${stringField.replace(/"/g, '""')}"`;
+      }
+      return `"${stringField}"`;
+    };
+
+    currentFetchedTimeData.forEach((card) => {
+      const listName = currentListMap[card.listId] || "Unknown List";
+      const cardName = card.cardName || "Unnamed Card";
+      const cardUrl = card.cardUrl || "";
+      const estimatedHours = formatHours(card.estimatedHours || 0);
+
+      if (card.timeEntries && card.timeEntries.length > 0) {
+        card.timeEntries.forEach((entry) => {
+          const userName = currentMemberMap[entry.memberId] || "Unknown User";
+          const dateStr = entry.date
+            ? new Date(entry.date).toLocaleDateString()
+            : "N/A";
+          const reportedHours = formatHours(entry.hours || 0);
+          const comment = entry.comment || "";
+          const row = [
+            listName,
+            cardName,
+            cardUrl,
+            estimatedHours,
+            userName,
+            dateStr,
+            reportedHours,
+            comment,
+          ];
+          csvContent += row.map(escapeCsv).join(",") + "\r\n";
+        });
+      } else {
+        const row = [
+          listName,
+          cardName,
+          cardUrl,
+          estimatedHours,
+          "N/A",
+          "N/A",
+          "0",
+          "(No time entries reported)",
+        ];
+        csvContent += row.map(escapeCsv).join(",") + "\r\n";
+      }
+    });
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", filename);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   }
+
+  // Removed renderCharts and clearCharts functions
 
   function populateUserFilter(memberMap) {
     const userSelectElement = document.getElementById("user-select");
@@ -340,39 +395,19 @@ document.addEventListener("DOMContentLoaded", () => {
       );
       return;
     }
-
     try {
-      // Add explicit null check before reading value
-      const currentVal = userSelectElement ? userSelectElement.value : "";
-      // Ensure element exists before setting innerHTML
-      if (userSelectElement) {
-        userSelectElement.innerHTML = '<option value="">All Users</option>';
-      } else {
-        console.error(
-          "User select element became null before setting innerHTML."
-        );
-        return; // Stop if element is null here
-      }
-
+      const currentVal = userSelectElement.value;
+      userSelectElement.innerHTML = '<option value="">All Users</option>';
       const sortedMembers = Object.entries(memberMap).sort(
         ([, nameA], [, nameB]) => nameA.localeCompare(nameB)
       );
-
       sortedMembers.forEach(([id, name]) => {
         const option = document.createElement("option");
         option.value = id;
         option.textContent = name;
-        // Check again before appendChild
-        if (userSelectElement) {
-          userSelectElement.appendChild(option);
-        }
+        userSelectElement.appendChild(option);
       });
-
-      // Check again before setting value
-      if (
-        userSelectElement &&
-        userSelectElement.querySelector(`option[value="${currentVal}"]`)
-      ) {
+      if (userSelectElement.querySelector(`option[value="${currentVal}"]`)) {
         userSelectElement.value = currentVal;
       }
     } catch (error) {
@@ -397,26 +432,18 @@ document.addEventListener("DOMContentLoaded", () => {
         '<option value="">Error loading labels</option>';
       return;
     }
-
     try {
-      const currentVal = labelSelectElement.value; // Preserve selection
-      labelSelectElement.innerHTML = '<option value="">All Labels</option>'; // Reset
-
-      // Sort labels alphabetically by name, case-insensitive
+      const currentVal = labelSelectElement.value;
+      labelSelectElement.innerHTML = '<option value="">All Labels</option>';
       boardLabels.sort((a, b) =>
         a.name.localeCompare(b.name, undefined, { sensitivity: "base" })
       );
-
       boardLabels.forEach((label) => {
         const option = document.createElement("option");
         option.value = label.id;
-        option.textContent = label.name || `(No Name - ${label.color})`; // Handle labels without names
-        // Optional: Add color indicator (might need more styling)
-        // option.style.backgroundColor = label.color; // Simple background color
+        option.textContent = label.name || `(No Name - ${label.color})`;
         labelSelectElement.appendChild(option);
       });
-
-      // Restore previous selection if possible
       if (labelSelectElement.querySelector(`option[value="${currentVal}"]`)) {
         labelSelectElement.value = currentVal;
       }
@@ -428,18 +455,16 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // --- Initialize Date Range Picker (using jQuery) ---
-  // Check if jQuery and daterangepicker are loaded
   if (typeof $ !== "undefined" && typeof $.fn.daterangepicker !== "undefined") {
     $("#date-range-picker").daterangepicker({
-      opens: "left", // Or 'right'
-      autoUpdateInput: false, // Don't auto-update input initially
+      opens: "left",
+      autoUpdateInput: false, // Set to false: Input field is empty initially
       locale: {
         format: "YYYY-MM-DD",
         cancelLabel: "Clear",
         applyLabel: "Apply",
       },
       ranges: {
-        // Optional predefined ranges
         Today: [moment(), moment()],
         Yesterday: [moment().subtract(1, "days"), moment().subtract(1, "days")],
         "Last 7 Days": [moment().subtract(6, "days"), moment()],
@@ -452,23 +477,36 @@ document.addEventListener("DOMContentLoaded", () => {
       },
     });
 
-    // Handle selection and clearing
+    // Event listener for when the picker is shown
+    $("#date-range-picker").on("show.daterangepicker", function (ev, picker) {
+      // If the input is currently empty, set the picker's dates to the current month
+      if (!$(this).val()) {
+        const startOfMonth = moment().startOf("month");
+        const endOfMonth = moment().endOf("month");
+        picker.setStartDate(startOfMonth);
+        picker.setEndDate(endOfMonth);
+      }
+    });
+
     $("#date-range-picker").on("apply.daterangepicker", function (ev, picker) {
       $(this).val(
         picker.startDate.format("YYYY-MM-DD") +
           " - " +
           picker.endDate.format("YYYY-MM-DD")
       );
+      // Trigger filter fetch when a range is applied
+      const selectedBoardId = document.getElementById("board-select").value;
+      if (selectedBoardId) fetchTimeData(selectedBoardId);
     });
 
     $("#date-range-picker").on("cancel.daterangepicker", function (ev, picker) {
       $(this).val(""); // Clear the input
-      // Optionally trigger filter update here if needed immediately on clear
-      // const selectedBoardId = document.getElementById("board-select").value;
-      // if (selectedBoardId) fetchTimeData(selectedBoardId);
+      // Trigger filter fetch when cleared
+      const selectedBoardId = document.getElementById("board-select").value;
+      if (selectedBoardId) fetchTimeData(selectedBoardId);
     });
 
-    // Set initial value to empty
+    // Keep input empty initially
     $("#date-range-picker").val("");
   } else {
     console.error(
@@ -487,29 +525,37 @@ document.addEventListener("DOMContentLoaded", () => {
       const selectedBoardId = event.target.value;
       currentListMap = {};
       currentMemberMap = {};
+      currentFetchedTimeData = [];
       const timeEntriesContainerElement = document.getElementById(
         "time-entries-container"
       );
-      if (timeEntriesContainerElement) {
-        // Removed innerHTML assignment here
-      } else {
+      if (timeEntriesContainerElement)
+        timeEntriesContainerElement.innerHTML =
+          "<p>Select a board to view time entries.</p>";
+      else
         console.error(
           "Could not find timeEntriesContainerElement in change listener."
         );
-      }
-      // Clear date picker when board changes
+      // clearCharts(); // Removed chart clearing call
+      // if (chartsContainer) // Removed chart container reset
+      //   chartsContainer.innerHTML =
+      //     "<p>Select a board and apply filters to view charts.</p>";
+
+      // Reset date picker to empty when board changes
       if (
         typeof $ !== "undefined" &&
         typeof $.fn.daterangepicker !== "undefined"
       ) {
         $("#date-range-picker").val("");
-        // Reset the picker's internal dates if necessary (might not be needed depending on desired behavior)
-        // const picker = $('#date-range-picker').data('daterangepicker');
-        // if (picker) {
-        //     picker.setStartDate(moment()); // Or some default
-        //     picker.setEndDate(moment());   // Or some default
-        // }
+        // Also reset internal dates of the picker instance
+        const picker = $("#date-range-picker").data("daterangepicker");
+        if (picker) {
+          // Setting to null might cause issues, better to set to a default like today or clear ranges
+          // Or simply rely on the 'show' event to set it next time it's opened.
+          // Let's just clear the input value for now.
+        }
       }
+
       fetchTimeData(selectedBoardId);
     } catch (error) {
       console.error("Error in boardSelect change listener:", error);
@@ -517,9 +563,8 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   applyFiltersButton.addEventListener("click", () => {
-    // Wrap entire listener in try...catch
     try {
-      const boardSelectElement = document.getElementById("board-select"); // Get fresh ref
+      const boardSelectElement = document.getElementById("board-select");
       if (!boardSelectElement) {
         console.error(
           "Apply Filters Error: Could not find board select element."
@@ -528,11 +573,8 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
       const selectedBoardId = boardSelectElement.value;
-      if (selectedBoardId) {
-        fetchTimeData(selectedBoardId);
-      } else {
-        alert("Please select a board first.");
-      }
+      if (selectedBoardId) fetchTimeData(selectedBoardId);
+      else alert("Please select a board first.");
     } catch (error) {
       console.error("Error in applyFiltersButton click listener:", error);
       alert(
@@ -549,11 +591,8 @@ document.addEventListener("DOMContentLoaded", () => {
     toggleAllButton.addEventListener("click", () => {
       const container = document.getElementById("time-entries-container");
       if (!container) return;
-
       const allDetails = container.querySelectorAll("details");
-      if (allDetails.length === 0) return; // Nothing to toggle
-
-      // Determine the target state: if *any* are closed, open all. Otherwise, close all.
+      if (allDetails.length === 0) return;
       let shouldOpen = false;
       for (const detail of allDetails) {
         if (!detail.open) {
@@ -561,17 +600,18 @@ document.addEventListener("DOMContentLoaded", () => {
           break;
         }
       }
-
-      // Apply the state and update button text
       allDetails.forEach((detail) => {
         detail.open = shouldOpen;
       });
       toggleAllButton.textContent = shouldOpen ? "Collapse All" : "Expand All";
     });
   } else {
-    console.warn("Toggle all button not found."); // Warn if button is missing
+    console.warn("Toggle all button not found.");
   }
 
   // --- Initial Load ---
+  // Removed assignment of chart element references
+
   fetchBoards();
+  // No initial tab switch needed
 });

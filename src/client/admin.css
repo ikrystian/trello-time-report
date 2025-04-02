@@ -10,7 +10,7 @@ h2 {
   color: #0052cc; /* Updated color from original */
 }
 
-.controls,
+.controls, 
 .filters,
 .summary, /* Keep summary styles for now, though it's hidden */
 .data-display {
@@ -19,6 +19,19 @@ h2 {
   border-radius: 3px;
   box-shadow: 0 1px 1px rgba(9, 30, 66, 0.25);
   margin-bottom: 20px;
+}
+
+.board-select {
+  margin-bottom: 0;
+}
+
+.controls {
+  display: flex;
+
+  #filters {
+    margin-top: 0;
+    padding-top: 0;
+  }
 }
 
 label {
@@ -246,6 +259,7 @@ tbody tr:nth-child(odd) {
   color: #172b4d;
   align-items: start; /* Align items to the top */
 }
+
 .entry-item:last-child {
   border-bottom: none;
 }
