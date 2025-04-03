@@ -1,8 +1,9 @@
 'use client';
 
-import React from 'react';
-import { format } from "date-fns";
+import React, { useState, useEffect } from 'react'; // Add useState, useEffect
+import { format } from "date-fns"; // Remove addDays
 import { Calendar as CalendarIcon } from "lucide-react";
+import { DateRange } from "react-day-picker"; // Import DateRange
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -65,67 +66,70 @@ export default function Filters({
         (a.name || '').localeCompare(b.name || '', undefined, { sensitivity: 'base' })
     );
 
+    // State for the DateRangePicker
+    const [dateRange, setDateRange] = useState<DateRange | undefined>({
+        from: startDate ?? undefined,
+        to: endDate ?? undefined,
+    });
+
+    // Update parent state when dateRange changes
+    useEffect(() => {
+        onStartDateChange(dateRange?.from ?? null);
+        onEndDateChange(dateRange?.to ?? null);
+    }, [dateRange, onStartDateChange, onEndDateChange]);
+
+    // Update local state if parent props change
+     useEffect(() => {
+        if (startDate !== dateRange?.from || endDate !== dateRange?.to) {
+            setDateRange({ from: startDate ?? undefined, to: endDate ?? undefined });
+        }
+        // Intentionally disable exhaustive-deps, we only want this to run when parent props change
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [startDate, endDate]);
+
+
     return (
         <div className="mb-6 p-4 border rounded flex flex-wrap gap-4 items-end">
             {/* Date Range Picker */}
             <div className="grid gap-2">
                 <Label>Zakres Dat</Label>
-                <div className="flex gap-2">
-                    <Popover>
-                        <PopoverTrigger asChild>
-                            <Button
-                                id="date-start"
-                                variant={"outline"}
-                                className={cn(
-                                    "w-[180px] justify-start text-left font-normal",
-                                    !startDate && "text-muted-foreground"
-                                )}
-                                disabled={isLoading}
-                            >
-                                <CalendarIcon className="mr-2 h-4 w-4" />
-                                {startDate ? format(startDate, "yyyy-MM-dd") : <span>Data pocz.</span>}
-                            </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                            <Calendar
-                                mode="single"
-                                selected={startDate ?? undefined} // Pass undefined if null
-                                onSelect={(date) => onStartDateChange(date ?? null)} // Handle undefined from selection
-                                disabled={(date) =>
-                                    (endDate && date > endDate) || date < new Date("1900-01-01")
-                                }
-                                initialFocus
-                            />
-                        </PopoverContent>
-                    </Popover>
-                    <Popover>
-                        <PopoverTrigger asChild>
-                            <Button
-                                id="date-end"
-                                variant={"outline"}
-                                className={cn(
-                                    "w-[180px] justify-start text-left font-normal",
-                                    !endDate && "text-muted-foreground"
-                                )}
-                                disabled={isLoading}
-                            >
-                                <CalendarIcon className="mr-2 h-4 w-4" />
-                                {endDate ? format(endDate, "yyyy-MM-dd") : <span>Data końc.</span>}
-                            </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                            <Calendar
-                                mode="single"
-                                selected={endDate ?? undefined}
-                                onSelect={(date) => onEndDateChange(date ?? null)}
-                                disabled={(date) =>
-                                    date < (startDate || new Date("1900-01-01"))
-                                }
-                                initialFocus
-                            />
-                        </PopoverContent>
-                    </Popover>
-                </div>
+                <Popover>
+                    <PopoverTrigger asChild>
+                        <Button
+                            id="date"
+                            variant={"outline"}
+                            className={cn(
+                                "w-[300px] justify-start text-left font-normal",
+                                !dateRange && "text-muted-foreground"
+                            )}
+                            disabled={isLoading}
+                        >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {dateRange?.from ? (
+                                dateRange.to ? (
+                                    <>
+                                        {format(dateRange.from, "LLL dd, y")} -{" "}
+                                        {format(dateRange.to, "LLL dd, y")}
+                                    </>
+                                ) : (
+                                    format(dateRange.from, "LLL dd, y")
+                                )
+                            ) : (
+                                <span>Wybierz zakres dat</span>
+                            )}
+                        </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                            initialFocus
+                            mode="range"
+                            defaultMonth={dateRange?.from}
+                            selected={dateRange}
+                            onSelect={setDateRange}
+                            numberOfMonths={2}
+                        />
+                    </PopoverContent>
+                </Popover>
             </div>
 
             {/* User Filter */}
