@@ -39,7 +39,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkProvider localization={plPL}>
+    <ClerkProvider
+      localization={plPL}
+      afterSignOutUrl="/?logged_out=true"
+    >
       <html lang="pl" className="scroll-smooth" suppressHydrationWarning>
         <head />
         <body
