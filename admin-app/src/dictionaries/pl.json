@@ -217,6 +217,7 @@
       "reportedHoursLabel": "Zaraportowane Godziny",
       "userHoursTitle": "Godziny na Użytkownika",
       "listHoursTitle": "Godziny na Listę",
+      "labelHoursTitle": "Godziny na Etykietę",
       "unknownUser": "Nieznany Użytkownik",
       "unknownList": "Nieznana Lista",
       "noData": "Brak danych"

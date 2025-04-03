@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation'; // Import useRouter
 import { toast } from 'sonner';
 // Import the component AND the dictionary type it expects
 import LandingPageContent, { type LandingPageContentDictionary } from './LandingPageContent';
@@ -17,8 +17,9 @@ interface LandingPageProps {
   // Remove lang: string;
 }
 
-export default function LandingPage({ dictionary }: LandingPageProps) { // Remove lang from props
+export default function LandingPage({ dictionary }: LandingPageProps) {
   const searchParams = useSearchParams();
+  const router = useRouter(); // Get router instance
 
   useEffect(() => {
     // Check if user has been logged out
@@ -32,8 +33,12 @@ export default function LandingPage({ dictionary }: LandingPageProps) { // Remov
         description: toastDescription,
         duration: 3000,
       });
+
+      // Remove the query parameter from the URL without reloading the page
+      // or adding to history
+      router.replace('/', { scroll: false });
     }
-  }, [searchParams, dictionary]); // Use dictionary in dependency array
+  }, [searchParams, dictionary, router]); // Add router to dependency array
 
   // Pass only the dictionary down to the content component
   return <LandingPageContent dictionary={dictionary} />; // Remove lang prop

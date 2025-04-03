@@ -123,3 +123,47 @@
     @apply mx-auto px-4 sm:px-6 lg:px-8;
   }
 }
+
+/* Glowing Border Effect for Feature Cards */
+@property --gradient-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+@keyframes rotate {
+  to {
+    --gradient-angle: 360deg;
+  }
+}
+
+.feature-card-glow {
+  position: relative; /* Ensure the card is a positioning context */
+}
+
+.feature-card-glow::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit; /* Use the card's border-radius (e.g., rounded-lg) */
+  padding: 2px; /* Thickness of the glowing border */
+  /* Use theme variables for the gradient - adjust colors if needed */
+  background: conic-gradient(
+    from var(--gradient-angle),
+    var(--primary),
+    var(--accent),
+    var(--primary)
+  );
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: rotate 4s linear infinite; /* Speed of rotation */
+  opacity: 0; /* Hidden by default */
+  transition: opacity 0.4s ease-in-out; /* Fade-in transition */
+  z-index: -1; /* Place behind the card content */
+}
+
+.feature-card-glow:hover::before {
+  opacity: 1; /* Show on hover */
+}

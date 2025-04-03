@@ -217,6 +217,7 @@
       "reportedHoursLabel": "Reported Hours",
       "userHoursTitle": "Hours per User",
       "listHoursTitle": "Hours per List",
+      "labelHoursTitle": "Hours per Label",
       "unknownUser": "Unknown User",
       "unknownList": "Unknown List",
       "noData": "No data available"

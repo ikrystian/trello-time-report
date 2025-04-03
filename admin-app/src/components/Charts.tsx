@@ -9,23 +9,23 @@ import {
   Title,
   Tooltip,
   Legend,
-  ArcElement, // Needed for Pie charts
+  // ArcElement removed
 } from 'chart.js';
-import { Bar, Pie } from 'react-chartjs-2';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"; // Import Card
+import { Bar } from 'react-chartjs-2'; // Pie import removed
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 // Register Chart.js components
 ChartJS.register(
   CategoryScale,
   LinearScale,
   BarElement,
-  ArcElement, // Register ArcElement for Pie charts
+  // ArcElement removed
   Title,
   Tooltip,
   Legend
 );
 
-// Interfaces (should match AdminPanel/TimeReport)
+// Interfaces
 interface TimeEntry {
     memberId?: string;
     date?: string;
@@ -33,33 +33,29 @@ interface TimeEntry {
     comment: string;
 }
 
+// Updated ProcessedCardData interface
 interface ProcessedCardData {
     cardId: string;
     cardName: string;
     cardUrl: string;
     listId: string;
     memberIds: string[];
-    // labels: TrelloLabel[]; // Not directly needed for these charts
+    labels: { id: string; name: string; color: string }[]; // Added labels property
     estimatedHours: number;
     timeEntries: TimeEntry[];
 }
 
+// Updated ChartsProps interface
 interface ChartsProps {
     timeData: ProcessedCardData[];
-    listMap: Record<string, string>;
-    memberMap: Record<string, { fullName: string; avatarUrl: string | null }>;
-    dictionary: ChartsDictionary; // Add dictionary prop
-    // lang prop removed as it's not currently used
+    dictionary: ChartsDictionary;
 }
 
-// Define dictionary structure for Charts
+// Updated ChartsDictionary interface
 export interface ChartsDictionary {
     hoursAxisLabel: string;
     reportedHoursLabel: string;
-    userHoursTitle: string;
-    listHoursTitle: string;
-    unknownUser: string;
-    unknownList: string;
+    labelHoursTitle: string; // Added labelHoursTitle
     noData: string;
 }
 
@@ -67,92 +63,67 @@ export interface ChartsDictionary {
 // Chart options (can be customized)
 const commonChartOptions = {
     responsive: true,
-    maintainAspectRatio: false, // Allow charts to fill container height better
+    maintainAspectRatio: false,
     plugins: {
         legend: {
             position: 'top' as const,
         },
         title: {
-            display: false, // We use h3 tags outside the chart
+            display: false,
         },
     },
 };
 
+// Corrected syntax for getBarChartOptions
 const getBarChartOptions = (dictionary: ChartsDictionary) => ({
     ...commonChartOptions,
     scales: {
         y: {
             beginAtZero: true,
-            title: { display: true, text: dictionary.hoursAxisLabel } // Use dictionary
+            title: { display: true, text: dictionary.hoursAxisLabel }
         },
+        // x: { // Optional: Add x-axis title if desired
+        //     title: { display: true, text: 'Labels' }
+        // }
     },
-});
-
-const pieChartOptions = {
-    ...commonChartOptions,
-    // No scales for pie charts
-};
+}); // Correctly closed object and function call
 
 
-export default function Charts({ timeData, listMap, memberMap, dictionary }: ChartsProps) { // Remove lang from destructuring
+export default function Charts({ timeData, dictionary }: ChartsProps) {
 
-    // Calculate data for User Hours Chart (Bar)
-    const userHoursData = useMemo(() => {
-        const hoursByUser: Record<string, number> = {};
+    // Calculate data for Label Hours Chart (Bar)
+    const labelHoursData = useMemo(() => {
+        const hoursByLabel: Record<string, number> = {};
         timeData.forEach(card => {
-            card.timeEntries.forEach(entry => {
-                const userId = entry.memberId || 'unknown';
-                // Use dictionary for unknown user
-                const userName = userId && memberMap[userId] ? memberMap[userId].fullName : dictionary.unknownUser;
-                hoursByUser[userName] = (hoursByUser[userName] || 0) + (entry.hours || 0);
-            });
-        });
+            const cardTotalHours = card.timeEntries.reduce((sum, entry) => sum + (entry.hours || 0), 0);
 
-        const sortedUsers = Object.entries(hoursByUser).sort(([, hoursA], [, hoursB]) => hoursB - hoursA);
-        const labels = sortedUsers.map(([name]) => name);
-        const data = sortedUsers.map(([, hours]) => hours);
-
-        return {
-            labels,
-            datasets: [
-                {
-                    label: dictionary.reportedHoursLabel, // Use dictionary
-                    data,
-                    backgroundColor: 'rgba(54, 162, 235, 0.6)',
-                    borderColor: 'rgba(54, 162, 235, 1)',
-                    borderWidth: 1,
-                },
-            ],
-        };
-    }, [timeData, memberMap, dictionary]); // Add dictionary dependency
-
-    // Calculate data for List Hours Chart (Pie)
-    const listHoursData = useMemo(() => {
-        const hoursByList: Record<string, number> = {};
-        timeData.forEach(card => {
-            const listId = card.listId || 'unknown';
-            // Use dictionary for unknown list
-            const listName = listMap[listId] || dictionary.unknownList;
-            const listHours = card.timeEntries.reduce((sum, entry) => sum + (entry.hours || 0), 0);
-            if (listHours > 0) {
-                hoursByList[listName] = (hoursByList[listName] || 0) + listHours;
+            if (cardTotalHours > 0 && card.labels && card.labels.length > 0) {
+                const hoursPerLabel = cardTotalHours / card.labels.length;
+                card.labels.forEach(label => {
+                    // Ensure label and label.name are accessed safely
+                    const labelName = label?.name || 'Unnamed Label';
+                    hoursByLabel[labelName] = (hoursByLabel[labelName] || 0) + hoursPerLabel;
+                });
+            } else if (cardTotalHours > 0) {
+                // Optional: Assign hours to a default category if no labels
+                // hoursByLabel['No Label'] = (hoursByLabel['No Label'] || 0) + cardTotalHours;
             }
         });
 
-        const sortedLists = Object.entries(hoursByList).sort(([, hoursA], [, hoursB]) => hoursB - hoursA);
-        const labels = sortedLists.map(([name]) => name);
-        const data = sortedLists.map(([, hours]) => hours);
+        const sortedLabels = Object.entries(hoursByLabel)
+                                .sort(([, hoursA], [, hoursB]) => hoursB - hoursA);
 
-        // Generate dynamic colors for pie chart slices
-        const backgroundColors = data.map((_, index) => `hsl(${(index * 360 / data.length) % 360}, 70%, 70%)`);
-        const borderColors = data.map((_, index) => `hsl(${(index * 360 / data.length) % 360}, 70%, 50%)`);
+        const labels = sortedLabels.map(([name]) => name);
+        const data = sortedLabels.map(([, hours]) => parseFloat(hours.toFixed(2)));
 
+        const backgroundColors = data.map((_, index) => `hsl(${(index * 40) % 360}, 60%, 70%)`);
+        const borderColors = data.map((_, index) => `hsl(${(index * 40) % 360}, 60%, 50%)`);
 
         return {
             labels,
             datasets: [
                 {
-                    label: dictionary.reportedHoursLabel, // Use dictionary
+                    label: dictionary.reportedHoursLabel,
                     data,
                     backgroundColor: backgroundColors,
                     borderColor: borderColors,
@@ -160,38 +131,20 @@ export default function Charts({ timeData, listMap, memberMap, dictionary }: Cha
                 },
             ],
         };
-    }, [timeData, listMap, dictionary]); // Add dictionary dependency
+    }, [timeData, dictionary]);
 
-    // Get dynamic options based on dictionary
     const dynamicBarOptions = useMemo(() => getBarChartOptions(dictionary), [dictionary]);
 
     return (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
-            {/* User Hours Chart */}
+        <div className="mt-4">
             <Card>
                 <CardHeader>
-                    <CardTitle className="text-center">{dictionary.userHoursTitle}</CardTitle>
+                    <CardTitle className="text-center">{dictionary.labelHoursTitle}</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <div className="relative h-64 md:h-80">
-                        {userHoursData.labels.length > 0 ? (
-                            <Bar options={dynamicBarOptions} data={userHoursData} />
-                        ) : (
-                            <p className="text-center text-muted-foreground pt-10">{dictionary.noData}</p>
-                        )}
-                    </div>
-                </CardContent>
-            </Card>
-
-            {/* List Hours Chart */}
-            <Card>
-                <CardHeader>
-                    <CardTitle className="text-center">{dictionary.listHoursTitle}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <div className="relative h-64 md:h-80">
-                        {listHoursData.labels.length > 0 ? (
-                            <Pie options={pieChartOptions} data={listHoursData} />
+                    <div className="relative h-80 md:h-96">
+                        {labelHoursData.labels.length > 0 ? (
+                            <Bar options={dynamicBarOptions} data={labelHoursData} />
                         ) : (
                             <p className="text-center text-muted-foreground pt-10">{dictionary.noData}</p>
                         )}

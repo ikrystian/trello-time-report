@@ -167,7 +167,7 @@ export default function LandingPageContent({ dictionary }: LandingPageContentPro
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {/* Feature Card 1 */}
-              <Card className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+              <Card className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1 feature-card-glow">
                 <CardHeader>
                   <BarChart3 className="h-10 w-10 text-primary mb-2 group-hover:scale-110 transition-transform duration-300" />
                   <CardTitle>{dictionary.features.card1.title}</CardTitle>
@@ -194,7 +194,7 @@ export default function LandingPageContent({ dictionary }: LandingPageContentPro
               </Card>
 
               {/* Feature Card 2 */}
-              <Card className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+              <Card className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1 feature-card-glow">
                 <CardHeader>
                   <Users className="h-10 w-10 text-primary mb-2 group-hover:scale-110 transition-transform duration-300" />
                   <CardTitle>{dictionary.features.card2.title}</CardTitle>
@@ -221,7 +221,7 @@ export default function LandingPageContent({ dictionary }: LandingPageContentPro
               </Card>
 
               {/* Feature Card 3 */}
-              <Card className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+              <Card className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1 feature-card-glow">
                 <CardHeader>
                   <Calendar className="h-10 w-10 text-primary mb-2 group-hover:scale-110 transition-transform duration-300" />
                   <CardTitle>{dictionary.features.card3.title}</CardTitle>
@@ -251,7 +251,7 @@ export default function LandingPageContent({ dictionary }: LandingPageContentPro
             {/* Second row of feature cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {/* Feature Card 4 */}
-              <Card className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+              <Card className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1 feature-card-glow">
                 <CardHeader>
                   <PieChart className="h-10 w-10 text-primary mb-2 group-hover:scale-110 transition-transform duration-300" />
                   <CardTitle>{dictionary.features.card4.title}</CardTitle>
@@ -278,7 +278,7 @@ export default function LandingPageContent({ dictionary }: LandingPageContentPro
               </Card>
 
               {/* Feature Card 5 */}
-              <Card className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+              <Card className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1 feature-card-glow">
                 <CardHeader>
                   <FileText className="h-10 w-10 text-primary mb-2 group-hover:scale-110 transition-transform duration-300" />
                   <CardTitle>{dictionary.features.card5.title}</CardTitle>
@@ -305,7 +305,7 @@ export default function LandingPageContent({ dictionary }: LandingPageContentPro
               </Card>
 
               {/* Feature Card 6 */}
-              <Card className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+              <Card className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1 feature-card-glow">
                 <CardHeader>
                   <Star className="h-10 w-10 text-primary mb-2 group-hover:scale-110 transition-transform duration-300" />
                   <CardTitle>{dictionary.features.card6.title}</CardTitle>
