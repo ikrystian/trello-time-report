@@ -5,22 +5,35 @@ import { Clock, LogOut } from 'lucide-react';
 import { ThemeSwitcher } from '@/components/ThemeSwitcher';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import { useRouter } from 'next/navigation';
 
 export default function DashboardHeader() {
   const { signOut } = useClerk();
-  const router = useRouter();
 
   const handleSignOut = async () => {
-    await signOut();
-    // After signing out, redirect to the home page
-    router.push('/');
-    // Show a toast notification
-    toast.success('Wylogowano pomyślnie', {
-      description: 'Dziękujemy za korzystanie z Trello Time Report',
-      position: 'top-center',
-      duration: 3000,
-    });
+    try {
+      // Show toast before sign out to ensure it's visible
+      toast.success('Wylogowano pomyślnie', {
+        description: 'Dziękujemy za korzystanie z Trello Time Report',
+        duration: 3000,
+        classNames: {
+          toast: "group toast group-[.toaster]:bg-background group-[.toaster]:text-foreground group-[.toaster]:border-border group-[.toaster]:shadow-lg"
+
+        }
+      });
+
+      // Sign out from Clerk with redirect to home page
+      // Let Clerk handle the redirect to the home page
+      await signOut({
+        redirectUrl: '/'
+      });
+
+    } catch (error) {
+      console.error('Error during sign out:', error);
+      toast.error('Wystąpił błąd podczas wylogowywania', {
+        description: 'Spróbuj ponownie za chwilę',
+        duration: 3000,
+      });
+    }
   };
 
   return (
