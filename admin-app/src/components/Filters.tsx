@@ -3,12 +3,25 @@
 import React, { useState, useEffect } from 'react';
 import { format } from "date-fns";
 import { pl } from 'date-fns/locale'; // Import only Polish locale
-import { Calendar as CalendarIcon } from "lucide-react";
+import { Calendar as CalendarIcon, Mail } from "lucide-react"; // Import Mail icon
 import { DateRange } from "react-day-picker";
+import axios from 'axios'; // Import axios
+import { toast } from 'sonner'; // Import toast
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
-import { ExportButton, type ExportButtonDictionary } from "@/components/ExportButton"; // Re-add ExportButtonDictionary import
+import { ExportButton, type ExportButtonDictionary } from "@/components/ExportButton"; // Keep this import
+import { generateReportHTML } from "@/lib/export-utils"; // Import generateReportHTML from correct path
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"; // Import Dialog components
+import { Input } from "@/components/ui/input"; // Import Input
 import {
   Popover,
   PopoverContent,
@@ -42,6 +55,23 @@ export interface FiltersDictionary {
     applyButton: string;
     loadingButton: string;
     noNameLabel: string;
+    sendEmailButtonLabel: string;
+    // Email Dialog specific labels
+    emailDialogTitle: string;
+    emailDialogDescription: string;
+    emailDialogInputLabel: string;
+    emailDialogInputPlaceholder: string;
+    emailDialogSendButton: string;
+    emailDialogCancelButton: string;
+    emailDialogSendingButton: string;
+    // Toast messages
+    emailValidationEmpty: string;
+    emailValidationInvalid: string;
+    emailSendingToast: string;
+    emailSuccessToastTitle: string;
+    emailSuccessToastDescription: string; // e.g., "Report sent to {email}"
+    emailErrorToastTitle: string;
+    emailErrorToastDescription: string; // e.g., "Failed to send report."
     // exportButtonSection: ExportButtonDictionary; // Removed: This belongs at the dashboard level, not within filters
 }
 
@@ -88,6 +118,11 @@ export default function Filters({
     // Set date-fns locale to Polish
     const dateLocale = pl;
 
+    // State for email dialog
+    const [isEmailDialogOpen, setIsEmailDialogOpen] = useState(false);
+    const [emailToSend, setEmailToSend] = useState('');
+    const [isSendingEmail, setIsSendingEmail] = useState(false); // State for loading indicator
+
     // Sort members and labels for dropdowns
     const sortedMembers = Object.entries(memberMap).sort(([, memberA], [, memberB]) =>
         memberA.fullName.localeCompare(memberB.fullName)
@@ -116,6 +151,65 @@ export default function Filters({
         // Intentionally disable exhaustive-deps, we only want this to run when parent props change
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [startDate, endDate]);
+
+    // Email validation regex
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    // Handler for sending email
+    const handleSendEmail = async () => {
+        // Basic email validation
+        if (!emailToSend) {
+            toast.error(dictionary.emailValidationEmpty);
+            return;
+        }
+        if (!emailRegex.test(emailToSend)) {
+            toast.error(dictionary.emailValidationInvalid);
+            return;
+        }
+
+        setIsSendingEmail(true);
+        const toastId = toast.loading(dictionary.emailSendingToast);
+
+        try {
+            // Generate HTML content using the imported function
+            const htmlContent = generateReportHTML(timeData, listMap, memberMap);
+
+            // Generate subject
+            const subject = `Trello Time Report - ${format(new Date(), 'yyyy-MM-dd')}`;
+
+            // Call the API endpoint
+            await axios.post('/api/send-report', {
+                to: emailToSend,
+                subject: subject,
+                htmlContent: htmlContent,
+            });
+
+            toast.success(dictionary.emailSuccessToastTitle, {
+                id: toastId,
+                description: dictionary.emailSuccessToastDescription.replace('{email}', emailToSend),
+            });
+
+            setEmailToSend(''); // Clear input
+            setIsEmailDialogOpen(false); // Close dialog
+
+        } catch (error) {
+            console.error('Error sending email:', error);
+            let errorMessage = dictionary.emailErrorToastDescription; // Default error message
+            if (axios.isAxiosError(error) && error.response?.data?.error) {
+                // Append server error details if available
+                errorMessage = `${errorMessage} Details: ${error.response.data.error}`;
+            } else if (error instanceof Error) {
+                errorMessage = `${errorMessage} Details: ${error.message}`;
+            }
+
+            toast.error(dictionary.emailErrorToastTitle, {
+                id: toastId,
+                description: errorMessage,
+            });
+        } finally {
+            setIsSendingEmail(false);
+        }
+    };
 
 
     return (
@@ -225,6 +319,54 @@ export default function Filters({
                         // Pass the specific dictionary for ExportButton
                         dictionary={exportButtonDictionary}
                     />
+                )}
+                {/* Send Email Button with Dialog */}
+                {timeData.length > 0 && (
+                    <Dialog open={isEmailDialogOpen} onOpenChange={setIsEmailDialogOpen}>
+                        <DialogTrigger asChild>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="flex items-center gap-1"
+                                disabled={isLoading} // Disable when loading like other buttons
+                            >
+                                <Mail className="h-4 w-4" />
+                                <span>{dictionary.sendEmailButtonLabel}</span> {/* Use dictionary */}
+                            </Button>
+                        </DialogTrigger>
+                        <DialogContent className="sm:max-w-[425px]">
+                            <DialogHeader>
+                                <DialogTitle>{dictionary.emailDialogTitle}</DialogTitle>
+                                <DialogDescription>
+                                    {dictionary.emailDialogDescription}
+                                </DialogDescription>
+                            </DialogHeader>
+                            <div className="grid gap-4 py-4">
+                                <div className="grid grid-cols-4 items-center gap-4">
+                                    <Label htmlFor="email" className="text-right">
+                                        {dictionary.emailDialogInputLabel}
+                                    </Label>
+                                    <Input
+                                        id="email"
+                                        type="email"
+                                         placeholder={dictionary.emailDialogInputPlaceholder}
+                                         value={emailToSend}
+                                         onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmailToSend(e.target.value)}
+                                         className="col-span-3"
+                                         disabled={isSendingEmail}
+                                    />
+                                </div>
+                            </div>
+                            <DialogFooter>
+                                <Button variant="outline" onClick={() => setIsEmailDialogOpen(false)} disabled={isSendingEmail}>
+                                    {dictionary.emailDialogCancelButton}
+                                </Button>
+                                <Button type="button" onClick={handleSendEmail} disabled={isSendingEmail || !emailToSend}>
+                                    {isSendingEmail ? dictionary.emailDialogSendingButton : dictionary.emailDialogSendButton}
+                                </Button>
+                            </DialogFooter>
+                        </DialogContent>
+                    </Dialog>
                 )}
             </div>
         </div>

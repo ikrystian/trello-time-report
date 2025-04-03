@@ -156,12 +156,12 @@ export function exportToExcel(
   XLSX.writeFile(wb, getFilename('xlsx'));
 }
 
-// Export to HTML
-export function exportToHTML(
+// Generate HTML content for the report
+export function generateReportHTML(
   timeData: ProcessedCardData[],
   listMap: Record<string, string>,
   memberMap: Record<string, { fullName: string; avatarUrl: string | null }>
-): void {
+): string {
   let html = `
     <!DOCTYPE html>
     <html lang="pl">
@@ -224,9 +224,17 @@ export function exportToHTML(
     </body>
     </html>
   `;
+  return html;
+}
 
-  // Create and download file
-  const blob = new Blob([html], { type: 'text/html;charset=utf-8;' });
+// Export to HTML (triggers download)
+export function exportToHTML(
+  timeData: ProcessedCardData[],
+  listMap: Record<string, string>,
+  memberMap: Record<string, { fullName: string; avatarUrl: string | null }>
+): void {
+  const htmlContent = generateReportHTML(timeData, listMap, memberMap);
+  const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8;' });
   saveAs(blob, getFilename('html'));
 }
 

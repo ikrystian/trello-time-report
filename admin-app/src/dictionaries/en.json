@@ -190,7 +190,22 @@
       "labelFilterPlaceholder": "All Labels",
       "applyButton": "Apply Filters",
       "loadingButton": "Loading...",
-      "noNameLabel": "(No Name)"
+      "noNameLabel": "(No Name)",
+      "sendEmailButtonLabel": "Send Email",
+      "emailDialogTitle": "Send Report via Email",
+      "emailDialogDescription": "Enter the recipient's email address below. The report will be sent as HTML in the email body.",
+      "emailDialogInputLabel": "Email",
+      "emailDialogInputPlaceholder": "recipient@example.com",
+      "emailDialogSendButton": "Send",
+      "emailDialogCancelButton": "Cancel",
+      "emailDialogSendingButton": "Sending...",
+      "emailValidationEmpty": "Email address cannot be empty.",
+      "emailValidationInvalid": "Please enter a valid email address.",
+      "emailSendingToast": "Sending report via email...",
+      "emailSuccessToastTitle": "Email Sent",
+      "emailSuccessToastDescription": "Report successfully sent to {email}.",
+      "emailErrorToastTitle": "Email Error",
+      "emailErrorToastDescription": "Failed to send report."
     },
     "timeReportSection": {
       "noData": "N/A",

@@ -190,7 +190,22 @@
       "labelFilterPlaceholder": "Wszystkie Etykiety",
       "applyButton": "Zastosuj Filtry",
       "loadingButton": "Ładowanie...",
-      "noNameLabel": "(Brak Nazwy)"
+      "noNameLabel": "(Brak Nazwy)",
+      "sendEmailButtonLabel": "Wyślij Email",
+      "emailDialogTitle": "Wyślij Raport Emailem",
+      "emailDialogDescription": "Wprowadź adres email odbiorcy poniżej. Raport zostanie wysłany jako HTML w treści wiadomości.",
+      "emailDialogInputLabel": "Email",
+      "emailDialogInputPlaceholder": "odbiorca@example.com",
+      "emailDialogSendButton": "Wyślij",
+      "emailDialogCancelButton": "Anuluj",
+      "emailDialogSendingButton": "Wysyłanie...",
+      "emailValidationEmpty": "Adres email nie może być pusty.",
+      "emailValidationInvalid": "Proszę wprowadzić poprawny adres email.",
+      "emailSendingToast": "Wysyłanie raportu emailem...",
+      "emailSuccessToastTitle": "Email Wysłany",
+      "emailSuccessToastDescription": "Raport został pomyślnie wysłany na adres {email}.",
+      "emailErrorToastTitle": "Błąd Email",
+      "emailErrorToastDescription": "Nie udało się wysłać raportu."
     },
     "timeReportSection": {
       "noData": "B/D",
