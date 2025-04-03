@@ -80,13 +80,6 @@ export default function DashboardPage() { // Renamed component
 
   return (
     <main className="flex min-h-screen flex-col items-center p-6 md:p-12 lg:p-24">
-      <div className="w-full flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold text-center flex-grow">
-            Panel Administratora Raportów Czasu Trello
-         </h1>
-         {/* Redirects to /sign-in (catch-all route) after sign out */}
-         <UserButton afterSignOutUrl="/sign-in"/>
-       </div>
 
       {/* Content is now guaranteed to be shown only when loaded and authenticated */}
       <>

@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useMemo } from 'react'; // Removed useState, useRef, useEffect
+import React, { useMemo, useState } from 'react'; // Added useState
 import { format } from 'date-fns'; // Use date-fns for date formatting
+import { Button } from "@/components/ui/button"; // Import Button
 import {
     Table,
     TableBody,
@@ -146,8 +147,6 @@ function CardGroup({ card, memberMap }: CardGroupProps) {
 // --- Main TimeReport Component ---
 
 export default function TimeReport({ timeData, listMap, memberMap }: TimeReportProps) {
-    // Removed containerRef, allOpen state, toggleAllDetails, and useEffect for allOpen
-
     // Group and sort data
     const groupedAndSortedData = useMemo(() => {
         if (!timeData || timeData.length === 0) return [];
@@ -190,23 +189,58 @@ export default function TimeReport({ timeData, listMap, memberMap }: TimeReportP
 
     }, [timeData, listMap]);
 
-    // Calculate default open values for the accordion (all list names)
-    const defaultAccordionValues = useMemo(() => groupedAndSortedData.map(lg => lg.listName), [groupedAndSortedData]);
-
-    // Calculate default open values for the nested card accordions (all card IDs)
-    const defaultCardAccordionValues = useMemo(() => {
+    // Calculate all possible list names and card IDs for expand/collapse all
+    const allListNames = useMemo(() => groupedAndSortedData.map(lg => lg.listName), [groupedAndSortedData]);
+    const allCardIds = useMemo(() => {
         return groupedAndSortedData.flatMap(listGroup => listGroup.cards.map(card => card.cardId));
     }, [groupedAndSortedData]);
 
+    // State to control open list accordions
+    const [openListIds, setOpenListIds] = useState<string[]>(allListNames);
+    // State to control open card accordions
+    const [openCardIds, setOpenCardIds] = useState<string[]>(allCardIds);
+
+    // Determine if everything is currently expanded
+    const isAllExpanded = openListIds.length === allListNames.length && openCardIds.length === allCardIds.length;
+
+    // Initialize open states when data changes
+    React.useEffect(() => {
+        setOpenListIds(allListNames);
+        setOpenCardIds(allCardIds);
+    }, [allListNames, allCardIds]); // Depend on the calculated lists/cards
+
+    const toggleAll = () => {
+        if (isAllExpanded) {
+            // Collapse all
+            setOpenListIds([]);
+            setOpenCardIds([]);
+        } else {
+            // Expand all
+            setOpenListIds(allListNames);
+            setOpenCardIds(allCardIds);
+        }
+    };
+
     if (groupedAndSortedData.length === 0) {
-        return <p className="text-center text-muted-foreground py-4">Nie znaleziono wpisów czasu dla wybranych filtrów.</p>; // Use muted-foreground
+        return <p className="text-center text-muted-foreground py-4">Nie znaleziono wpisów czasu dla wybranych filtrów.</p>;
     }
 
     return (
-        // Removed containerRef and toggle button div
-        <Accordion type="multiple" defaultValue={defaultAccordionValues} className="w-full space-y-4">
-            {groupedAndSortedData.map((listGroup) => (
-                <AccordionItem key={listGroup.listName} value={listGroup.listName} className="border rounded bg-muted/30">
+        <div className="w-full">
+            <div className="mb-4 flex justify-end">
+                <Button variant="outline" size="sm" onClick={toggleAll}>
+                    {isAllExpanded ? 'Zwiń wszystko' : 'Rozwiń wszystko'}
+                </Button>
+            </div>
+            {/* Outer Accordion now controlled by state */}
+            <Accordion
+                type="multiple"
+                value={openListIds}
+                onValueChange={setOpenListIds}
+                className="w-full space-y-4"
+            >
+                {groupedAndSortedData.map((listGroup) => (
+                    <AccordionItem key={listGroup.listName} value={listGroup.listName} className="border rounded bg-muted/30">
                     <AccordionTrigger className="p-3 text-base font-bold hover:no-underline rounded-t">
                         {/* Removed manual triangle span */}
                         <span className="flex-grow mr-2 text-left">{listGroup.listName}</span>
@@ -215,9 +249,13 @@ export default function TimeReport({ timeData, listMap, memberMap }: TimeReportP
                         </span>
                     </AccordionTrigger>
                     <AccordionContent className="p-2 pl-4 border-t">
-                        {/* CardGroup now returns AccordionItems, wrap them in another Accordion */}
-                        {/* Set default values for nested accordion to keep cards open initially */}
-                        <Accordion type="multiple" defaultValue={defaultCardAccordionValues} className="w-full space-y-2">
+                        {/* Inner Accordion now controlled by state */}
+                        <Accordion
+                            type="multiple"
+                            value={openCardIds}
+                            onValueChange={setOpenCardIds}
+                            className="w-full space-y-2"
+                        >
                              {listGroup.cards.map((card) => (
                                 <CardGroup key={card.cardId} card={card} memberMap={memberMap} />
                             ))}
@@ -226,6 +264,6 @@ export default function TimeReport({ timeData, listMap, memberMap }: TimeReportP
                 </AccordionItem>
             ))}
         </Accordion>
-        // Removed style jsx global block
+        </div>
     );
 }
