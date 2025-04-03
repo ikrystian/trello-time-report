@@ -113,10 +113,6 @@ export default function AdminPanel({ boardId }: AdminPanelProps) {
 
     return (
         <Card className="w-full max-w-4xl mt-6">
-            <CardHeader>
-                <CardTitle>Raport dla tablicy: {boardId}</CardTitle>
-                {/* Optional: Add CardDescription here if needed */}
-            </CardHeader>
             <CardContent>
                 {/* Render Filters Component */}
                 <Filters
@@ -135,7 +131,7 @@ export default function AdminPanel({ boardId }: AdminPanelProps) {
             />
 
             {/* Display loading/error specifically for the data section */}
-            {isLoading && !timeData.length && <p className="text-center text-gray-500 py-4">Ładowanie danych...</p>}
+            {isLoading && !timeData.length && <p className="text-center">Ładowanie danych...</p>}
             {error && <p className="text-center text-red-600 py-4">Błąd: {error}</p>}
 
             {!isLoading && !error && timeData.length > 0 && (
