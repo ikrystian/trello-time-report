@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useMemo, useState } from 'react'; // Added useState
-import { format } from 'date-fns'; // Use date-fns for date formatting
+import { formatDatePL } from '@/lib/date-utils'; // Use date-fns for date formatting
 import { Button } from "@/components/ui/button"; // Import Button
 import {
     Table,
@@ -50,21 +50,17 @@ interface TimeReportProps {
     memberMap: Record<string, string>;
 }
 
-// Helper function to format hours (e.g., 8.5, 8)
+// Helper function to format hours with 2 decimal places
 function formatHours(hours: number | null | undefined): string {
     const num = Number(hours) || 0;
-    if (Math.abs(num - Math.round(num)) < 0.001) {
-        return num.toString();
-    } else {
-        return parseFloat(num.toFixed(1)).toString();
-    }
+    return num.toFixed(2);
 }
 
 // Helper function to format date string
 function formatDate(dateString: string | undefined): string {
     if (!dateString) return 'B/D'; // Brak Danych
     try {
-        return format(new Date(dateString), 'yyyy-MM-dd');
+        return formatDatePL(new Date(dateString));
     } catch (e) {
         console.error("Error formatting date:", dateString, e);
         return 'Błędna data';
@@ -92,25 +88,25 @@ function CardGroup({ card, memberMap }: CardGroupProps) {
                  {/* Removed the manual triangle span */}
                  <span className="flex-grow mr-2 overflow-hidden overflow-ellipsis whitespace-nowrap text-left">
                     {card.cardName}
-                    <a
-                        href={card.cardUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="ml-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-                        title="Otwórz kartę w Trello"
-                        onClick={(e) => e.stopPropagation()} // Prevent closing details on link click
-                    >
-                        🔗
-                    </a>
                 </span>
                 <span className="text-xs font-normal text-muted-foreground whitespace-nowrap pr-2"> {/* Added padding right */}
                     (Szac: {formatHours(card.estimatedHours)}h / Rap: {formatHours(card.totalReportedHours)}h)
                 </span>
+                <a
+                    href={card.cardUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="ml-2 opacity-70 hover:opacity-100 transition-all duration-200 hover:text-primary hover:scale-110"
+                    title="Otwórz kartę w Trello"
+                    onClick={(e) => e.stopPropagation()} // Prevent closing details on link click
+                >
+                    🔗
+                </a>
             </AccordionTrigger>
             <AccordionContent className="border-t pt-0"> {/* Remove default padding-top */}
                  {/* Content remains largely the same (Table or message) */}
                  {sortedEntries.length > 0 ? (
-                    <Table className="text-xs">
+                    <Table className="text-sm">
                         <TableHeader>
                             <TableRow>
                                 <TableHead className="w-[150px]">Użytkownik</TableHead>
@@ -126,10 +122,10 @@ function CardGroup({ card, memberMap }: CardGroupProps) {
                                 const hoursStr = formatHours(entry.hours);
                                 return (
                                     <TableRow key={`${entry.date}-${entry.memberId}-${index}`}>
-                                        <TableCell className="font-medium">{userName}</TableCell>
-                                        <TableCell>{dateStr}</TableCell>
-                                        <TableCell className="text-right">{hoursStr}h</TableCell>
-                                        <TableCell>{entry.comment || ''}</TableCell>
+                                        <TableCell className="font-medium text-sm">{userName}</TableCell>
+                                        <TableCell className="text-sm">{dateStr}</TableCell>
+                                        <TableCell className="text-right text-sm">{hoursStr}h</TableCell>
+                                        <TableCell className="text-sm">{entry.comment || ''}</TableCell>
                                     </TableRow>
                                 );
                             })}

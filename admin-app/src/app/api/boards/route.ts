@@ -38,7 +38,7 @@ export async function GET() {
       {
         params: {
           ...trelloAuth,
-          fields: 'id,name', // Only fetch necessary fields
+          fields: 'id,name,closed', // Fetch id, name, and closed status
         },
       }
     );

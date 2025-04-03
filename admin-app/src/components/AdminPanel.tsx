@@ -6,7 +6,7 @@ import Filters from './Filters'; // Import the Filters component
 import TimeReport from './TimeReport'; // Import the TimeReport component
 import Charts from './Charts'; // Import the Charts component
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"; // Import shadcn Tabs
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"; // Import Card components
+import { Card, CardContent } from "@/components/ui/card"; // Import Card components
 
 // Define interfaces based on the API response structure
 interface TimeEntry {
@@ -42,9 +42,27 @@ interface TimeDataResponse {
 
 interface AdminPanelProps {
     boardId: string; // Receive selected board ID as a prop
+    fromDate?: Date; // Start date for filtering
+    toDate?: Date; // End date for filtering
+    userId?: string; // Selected user ID for filtering
+    label?: string; // Selected label for filtering
+    onBoardChange?: (boardId: string) => void; // Callback for board change
+    onDateChange?: (range: { from?: Date; to?: Date }) => void; // Callback for date change
+    onUserChange?: (userId: string) => void; // Callback for user change
+    onLabelChange?: (labelId: string) => void; // Callback for label change
 }
 
-export default function AdminPanel({ boardId }: AdminPanelProps) {
+export default function AdminPanel({
+    boardId,
+    fromDate,
+    toDate,
+    userId,
+    label,
+    onBoardChange,
+    onDateChange,
+    onUserChange,
+    onLabelChange
+}: AdminPanelProps) {
     const [timeData, setTimeData] = useState<ProcessedCardData[]>([]);
     const [listMap, setListMap] = useState<Record<string, string>>({});
     const [memberMap, setMemberMap] = useState<Record<string, string>>({});
@@ -52,12 +70,41 @@ export default function AdminPanel({ boardId }: AdminPanelProps) {
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
 
-    // TODO: Add state for filters (dates, user, label)
-    const [startDate, setStartDate] = useState<Date | null>(null);
-    const [endDate, setEndDate] = useState<Date | null>(null);
-    const [selectedUserId, setSelectedUserId] = useState<string>('');
-    const [selectedLabelId, setSelectedLabelId] = useState<string>('');
+    // Initialize filter states with props or defaults
+    const [startDate, setStartDate] = useState<Date | null>(fromDate || null);
+    const [endDate, setEndDate] = useState<Date | null>(toDate || null);
+    const [selectedUserId, setSelectedUserId] = useState<string>(userId || '');
+    const [selectedLabelId, setSelectedLabelId] = useState<string>(label || '');
     const [activeTab, setActiveTab] = useState<string>('report'); // State for active tab
+
+    // Handle filter changes with callbacks to parent
+    const handleStartDateChange = (date: Date | null) => {
+        setStartDate(date);
+        if (onDateChange && date) {
+            onDateChange({ from: date, to: endDate || undefined });
+        }
+    };
+
+    const handleEndDateChange = (date: Date | null) => {
+        setEndDate(date);
+        if (onDateChange && date) {
+            onDateChange({ from: startDate || undefined, to: date });
+        }
+    };
+
+    const handleUserChange = (userId: string) => {
+        setSelectedUserId(userId);
+        if (onUserChange) {
+            onUserChange(userId);
+        }
+    };
+
+    const handleLabelChange = (labelId: string) => {
+        setSelectedLabelId(labelId);
+        if (onLabelChange) {
+            onLabelChange(labelId);
+        }
+    };
 
     // Define tabs
     const TABS = [
@@ -112,7 +159,7 @@ export default function AdminPanel({ boardId }: AdminPanelProps) {
     }, [fetchTimeData]); // Use the memoized fetch function
 
     return (
-        <Card className="w-full max-w-4xl mt-6">
+        <Card className="w-full max-w-7xl mt-6">
             <CardContent>
                 {/* Render Filters Component */}
                 <Filters
@@ -123,16 +170,16 @@ export default function AdminPanel({ boardId }: AdminPanelProps) {
                 selectedUserId={selectedUserId}
                 selectedLabelId={selectedLabelId}
                 isLoading={isLoading}
-                onStartDateChange={setStartDate}
-                onEndDateChange={setEndDate}
-                onUserChange={setSelectedUserId}
-                onLabelChange={setSelectedLabelId}
+                onStartDateChange={handleStartDateChange}
+                onEndDateChange={handleEndDateChange}
+                onUserChange={handleUserChange}
+                onLabelChange={handleLabelChange}
                 onApplyFilters={fetchTimeData} // Pass the fetch function
             />
 
             {/* Display loading/error specifically for the data section */}
             {isLoading && !timeData.length && <p className="text-center">Ładowanie danych...</p>}
-            {error && <p className="text-center text-red-600 py-4">Błąd: {error}</p>}
+            {error && <p className="text-center text-destructive py-4">Błąd: {error}</p>}
 
             {!isLoading && !error && timeData.length > 0 && (
                  <Tabs defaultValue="report" className="w-full mt-4" onValueChange={setActiveTab} value={activeTab}>

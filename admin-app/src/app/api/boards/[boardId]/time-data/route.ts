@@ -66,7 +66,7 @@ interface ProcessedCardData {
 
 export async function GET(
   request: NextRequest,
-  context: { params: { boardId: string } } // Use context object
+  context: { params: Promise<{ boardId: string }> } // Use context object with Promise type
 ) {
   const { userId: clerkUserId } = await auth(); // Get user ID from Clerk - Added await
 
@@ -74,7 +74,7 @@ export async function GET(
     return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
   }
 
-  const boardId = context.params.boardId; // Access boardId from context
+  const { boardId } = await context.params; // Access boardId from context
   const { searchParams } = request.nextUrl;
 
   // Extract query parameters
