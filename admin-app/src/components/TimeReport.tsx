@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo, useRef, useEffect } from 'react';
+import React, { useMemo } from 'react'; // Removed useState, useRef, useEffect
 import { format } from 'date-fns'; // Use date-fns for date formatting
 import {
     Table,
@@ -10,7 +10,13 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table";
-import { Button } from "@/components/ui/button"; // Import Button for toggle
+// Removed Button import as toggle button is removed
+import {
+    Accordion,
+    AccordionContent,
+    AccordionItem,
+    AccordionTrigger,
+} from "@/components/ui/accordion"; // Import Accordion components
 
 // Interfaces (can be moved to a common types file)
 interface TimeEntry {
@@ -66,43 +72,43 @@ function formatDate(dateString: string | undefined): string {
 
 // --- Sub-components for better structure ---
 
-// CardEntryItem is removed, logic moved into CardGroup's table
-
 interface CardGroupProps {
     card: ProcessedCardData & { totalReportedHours: number }; // Add calculated total
     memberMap: Record<string, string>;
-    defaultOpen?: boolean;
+    // defaultOpen prop is no longer needed for Accordion
 }
 
-function CardGroup({ card, memberMap, defaultOpen = true }: CardGroupProps) {
+// Note: CardGroup now returns an AccordionItem, intended to be used within an Accordion
+function CardGroup({ card, memberMap }: CardGroupProps) {
     const sortedEntries = useMemo(() =>
         [...card.timeEntries].sort((a, b) => (b.date && a.date) ? new Date(b.date).getTime() - new Date(a.date).getTime() : 0)
     , [card.timeEntries]);
 
+    // Using AccordionItem for each card. The parent component should wrap these in <Accordion type="multiple">
     return (
-        <details className="border rounded mb-2 " open={defaultOpen}>
-            <summary className="list-none p-2cursor-pointer font-semibold text-sm rounded-t flex justify-between items-center relative pl-6 group">
-                {/* Triangle Marker */}
-                <span className="absolute left-2 top-1/2 transform -translate-y-1/2 text-xs transition-transform duration-200 details-marker">▶</span>
-                <span className="flex-grow mr-2 overflow-hidden overflow-ellipsis whitespace-nowrap">
+        <AccordionItem value={card.cardId} className="border rounded mb-2 bg-background">
+             <AccordionTrigger className="p-2 text-sm font-semibold hover:no-underline group rounded-t">
+                 {/* Removed the manual triangle span */}
+                 <span className="flex-grow mr-2 overflow-hidden overflow-ellipsis whitespace-nowrap text-left">
                     {card.cardName}
                     <a
                         href={card.cardUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="ml-2  opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                        className="ml-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
                         title="Otwórz kartę w Trello"
                         onClick={(e) => e.stopPropagation()} // Prevent closing details on link click
                     >
                         🔗
                     </a>
                 </span>
-                <span className="text-xs font-normal text-muted-foreground whitespace-nowrap">
+                <span className="text-xs font-normal text-muted-foreground whitespace-nowrap pr-2"> {/* Added padding right */}
                     (Szac: {formatHours(card.estimatedHours)}h / Rap: {formatHours(card.totalReportedHours)}h)
                 </span>
-            </summary>
-            <div className="border-t">
-                {sortedEntries.length > 0 ? (
+            </AccordionTrigger>
+            <AccordionContent className="border-t pt-0"> {/* Remove default padding-top */}
+                 {/* Content remains largely the same (Table or message) */}
+                 {sortedEntries.length > 0 ? (
                     <Table className="text-xs">
                         <TableHeader>
                             <TableRow>
@@ -131,8 +137,8 @@ function CardGroup({ card, memberMap, defaultOpen = true }: CardGroupProps) {
                 ) : (
                     <p className="px-3 py-2 text-xs text-muted-foreground italic">Brak wpisów czasu.</p>
                 )}
-            </div>
-        </details>
+            </AccordionContent>
+        </AccordionItem>
     );
 }
 
@@ -140,8 +146,7 @@ function CardGroup({ card, memberMap, defaultOpen = true }: CardGroupProps) {
 // --- Main TimeReport Component ---
 
 export default function TimeReport({ timeData, listMap, memberMap }: TimeReportProps) {
-    const containerRef = useRef<HTMLDivElement>(null);
-    const [allOpen, setAllOpen] = useState(true); // State to track if all details should be open
+    // Removed containerRef, allOpen state, toggleAllDetails, and useEffect for allOpen
 
     // Group and sort data
     const groupedAndSortedData = useMemo(() => {
@@ -185,64 +190,42 @@ export default function TimeReport({ timeData, listMap, memberMap }: TimeReportP
 
     }, [timeData, listMap]);
 
-    // Toggle all details elements within the report
-    const toggleAllDetails = () => {
-        const newState = !allOpen;
-        setAllOpen(newState);
-        if (containerRef.current) {
-            containerRef.current.querySelectorAll('details').forEach(detail => {
-                detail.open = newState;
-            });
-        }
-    };
+    // Calculate default open values for the accordion (all list names)
+    const defaultAccordionValues = useMemo(() => groupedAndSortedData.map(lg => lg.listName), [groupedAndSortedData]);
 
-     // Effect to apply 'allOpen' state when it changes (e.g., after initial render or toggle)
-     useEffect(() => {
-        if (containerRef.current) {
-            containerRef.current.querySelectorAll('details').forEach(detail => {
-                detail.open = allOpen;
-            });
-        }
-    }, [allOpen, groupedAndSortedData]); // Re-apply if data changes
+    // Calculate default open values for the nested card accordions (all card IDs)
+    const defaultCardAccordionValues = useMemo(() => {
+        return groupedAndSortedData.flatMap(listGroup => listGroup.cards.map(card => card.cardId));
+    }, [groupedAndSortedData]);
 
     if (groupedAndSortedData.length === 0) {
-        return <p className="text-center text-gray-500 py-4">Nie znaleziono wpisów czasu dla wybranych filtrów.</p>;
+        return <p className="text-center text-muted-foreground py-4">Nie znaleziono wpisów czasu dla wybranych filtrów.</p>; // Use muted-foreground
     }
 
     return (
-        <div ref={containerRef}>
-            <div className="mb-2 text-right">
-                 <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={toggleAllDetails}
-                >
-                    {allOpen ? 'Zwiń Wszystkie' : 'Rozwiń Wszystkie'}
-                </Button>
-            </div>
-
+        // Removed containerRef and toggle button div
+        <Accordion type="multiple" defaultValue={defaultAccordionValues} className="w-full space-y-4">
             {groupedAndSortedData.map((listGroup) => (
-                <details key={listGroup.listName} className="border rounded mb-4 " open={allOpen}>
-                    <summary className="list-none p-3  cursor-pointer font-bold text-base rounded-t flex justify-between items-center relative pl-8 group">
-                         {/* Triangle Marker */}
-                        <span className="absolute left-2 top-1/2 transform -translate-y-1/2 text-blue-700 text-sm transition-transform duration-200 details-marker">▶</span>
-                        <span className="flex-grow mr-2">{listGroup.listName}</span>
-                        <span className="text-sm font-normal text-gray-700">
+                <AccordionItem key={listGroup.listName} value={listGroup.listName} className="border rounded bg-muted/30">
+                    <AccordionTrigger className="p-3 text-base font-bold hover:no-underline rounded-t">
+                        {/* Removed manual triangle span */}
+                        <span className="flex-grow mr-2 text-left">{listGroup.listName}</span>
+                        <span className="text-sm font-normal text-muted-foreground whitespace-nowrap pr-2">
                             (Est: {formatHours(listGroup.totalEstimatedHours)}h / Rep: {formatHours(listGroup.totalReportedHours)}h)
                         </span>
-                    </summary>
-                    <div className="p-2 pl-4 border-t">
-                        {listGroup.cards.map((card) => (
-                            <CardGroup key={card.cardId} card={card} memberMap={memberMap} defaultOpen={allOpen} />
-                        ))}
-                    </div>
-                </details>
+                    </AccordionTrigger>
+                    <AccordionContent className="p-2 pl-4 border-t">
+                        {/* CardGroup now returns AccordionItems, wrap them in another Accordion */}
+                        {/* Set default values for nested accordion to keep cards open initially */}
+                        <Accordion type="multiple" defaultValue={defaultCardAccordionValues} className="w-full space-y-2">
+                             {listGroup.cards.map((card) => (
+                                <CardGroup key={card.cardId} card={card} memberMap={memberMap} />
+                            ))}
+                        </Accordion>
+                    </AccordionContent>
+                </AccordionItem>
             ))}
-            {/* Simple CSS to handle the details marker rotation */}
-            <style jsx global>{`
-                details[open] > summary .details-marker {
-                    transform: translateY(-50%) rotate(90deg);
-                }
-            `}</style>
-        </div>
+        </Accordion>
+        // Removed style jsx global block
     );
+}

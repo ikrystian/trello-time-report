@@ -99,7 +99,7 @@ export default function Filters({
                             id="date"
                             variant={"outline"}
                             className={cn(
-                                "w-[300px] justify-start text-left font-normal",
+                                "flex-1 justify-start text-left font-normal",
                                 !dateRange && "text-muted-foreground"
                             )}
                             disabled={isLoading}
