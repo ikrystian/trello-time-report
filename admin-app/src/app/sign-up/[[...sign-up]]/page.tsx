@@ -1,9 +1,10 @@
 import { SignUp } from "@clerk/nextjs";
 
-export default function Page() {
+export default function SignUpPage() {
   return (
     <div className="flex justify-center items-center min-h-screen">
-      <SignUp path="/sign-up" />
+      {/* This catch-all route handles the sign-up process */}
+      <SignUp path="/sign-up" signInUrl="/sign-in" />
     </div>
   );
 }
