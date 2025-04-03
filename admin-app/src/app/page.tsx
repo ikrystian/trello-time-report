@@ -4,6 +4,7 @@
 
 import { useState, useEffect } from 'react';
 import axios from 'axios'; // Assuming axios is installed
+import { UserButton } from "@clerk/nextjs"; // Import UserButton
 import AdminPanel from '@/components/AdminPanel'; // Import the new component
 import {
   Card,
@@ -65,9 +66,12 @@ export default function AdminPage() {
 
   return (
     <main className="flex min-h-screen flex-col items-center p-6 md:p-12 lg:p-24">
-      <h1 className="text-3xl font-bold mb-8 text-center">
-        Panel Administratora Raportów Czasu Trello
-      </h1>
+      <div className="w-full flex justify-between items-center mb-8">
+        <h1 className="text-3xl font-bold text-center flex-grow">
+          Panel Administratora Raportów Czasu Trello
+        </h1>
+        <UserButton afterSignOutUrl="/"/> {/* Add UserButton */}
+      </div>
 
       <Card className="w-full max-w-4xl mb-6">
         <CardHeader>

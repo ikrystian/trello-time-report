@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { NextResponse } from 'next/server';
+import { auth } from '@clerk/nextjs/server';
 
 // Basic Trello API authentication parameters from environment variables
 const trelloAuth = {
@@ -17,6 +18,12 @@ if (!trelloAuth.key || !trelloAuth.token) {
 }
 
 export async function GET() {
+  const { userId } = await auth(); // Get user ID from Clerk - Added await
+
+  if (!userId) {
+    return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
+  }
+
   // Ensure keys are present before making the request
   if (!trelloAuth.key || !trelloAuth.token) {
     return NextResponse.json(

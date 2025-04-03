@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { NextRequest, NextResponse } from 'next/server';
+import { auth } from '@clerk/nextjs/server';
 
 // Trello API configuration from environment variables
 const trelloAuth = {
@@ -67,6 +68,12 @@ export async function GET(
   request: NextRequest,
   context: { params: { boardId: string } } // Use context object
 ) {
+  const { userId: clerkUserId } = await auth(); // Get user ID from Clerk - Added await
+
+  if (!clerkUserId) {
+    return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
+  }
+
   const boardId = context.params.boardId; // Access boardId from context
   const { searchParams } = request.nextUrl;
 
