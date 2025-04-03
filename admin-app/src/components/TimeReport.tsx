@@ -67,6 +67,27 @@ function formatDate(dateString: string | undefined): string {
     }
 }
 
+// Helper function to get CSS color from Trello label color
+function getTrelloLabelColor(color: string | undefined): string {
+    if (!color) return '#B3B3B3'; // Default gray for no color
+
+    // Map Trello colors to CSS colors
+    const colorMap: Record<string, string> = {
+        'green': '#61BD4F',
+        'yellow': '#F2D600',
+        'orange': '#FF9F1A',
+        'red': '#EB5A46',
+        'purple': '#C377E0',
+        'blue': '#0079BF',
+        'sky': '#00C2E0',
+        'lime': '#51E898',
+        'pink': '#FF78CB',
+        'black': '#344563',
+    };
+
+    return colorMap[color] || '#B3B3B3'; // Return mapped color or default gray
+}
+
 // --- Sub-components for better structure ---
 
 interface CardGroupProps {
@@ -81,14 +102,26 @@ function CardGroup({ card, memberMap }: CardGroupProps) {
         [...card.timeEntries].sort((a, b) => (b.date && a.date) ? new Date(b.date).getTime() - new Date(a.date).getTime() : 0)
     , [card.timeEntries]);
 
+    // Get the first label color if available
+    const labelColor = card.labels && card.labels.length > 0 ? getTrelloLabelColor(card.labels[0].color) : undefined;
+
     // Using AccordionItem for each card. The parent component should wrap these in <Accordion type="multiple">
     return (
         <AccordionItem value={card.cardId} className="border rounded mb-2 bg-background">
              <AccordionTrigger className="p-2 text-sm font-semibold hover:no-underline group rounded-t">
                  {/* Removed the manual triangle span */}
-                 <span className="flex-grow mr-2 overflow-hidden overflow-ellipsis whitespace-nowrap text-left">
-                    {card.cardName}
-                </span>
+                 <div className="flex items-center flex-grow mr-2 overflow-hidden">
+                    {/* Colored square for label */}
+                    {labelColor && (
+                        <div
+                            className="w-3 h-3 mr-2 rounded-sm flex-shrink-0"
+                            style={{ backgroundColor: labelColor }}
+                        />
+                    )}
+                    <span className="overflow-hidden overflow-ellipsis whitespace-nowrap text-left">
+                        {card.cardName}
+                    </span>
+                </div>
                 <span className="text-xs font-normal text-muted-foreground whitespace-nowrap pr-2"> {/* Added padding right */}
                     (Szac: {formatHours(card.estimatedHours)}h / Rap: {formatHours(card.totalReportedHours)}h)
                 </span>
