@@ -38,7 +38,7 @@ interface ProcessedCardData {
 interface TimeDataResponse {
     timeData: ProcessedCardData[];
     listMap: Record<string, string>;
-    memberMap: Record<string, string>;
+    memberMap: Record<string, { fullName: string; avatarUrl: string | null }>;
     boardLabels: TrelloLabel[];
 }
 
@@ -67,7 +67,7 @@ export default function AdminPanel({
 }: AdminPanelProps) {
     const [timeData, setTimeData] = useState<ProcessedCardData[]>([]);
     const [listMap, setListMap] = useState<Record<string, string>>({});
-    const [memberMap, setMemberMap] = useState<Record<string, string>>({});
+    const [memberMap, setMemberMap] = useState<Record<string, { fullName: string; avatarUrl: string | null }>>({});
     const [boardLabels, setBoardLabels] = useState<TrelloLabel[]>([]);
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
@@ -172,6 +172,8 @@ export default function AdminPanel({
                 selectedUserId={selectedUserId}
                 selectedLabelId={selectedLabelId}
                 isLoading={isLoading}
+                timeData={timeData}
+                listMap={listMap}
                 onStartDateChange={handleStartDateChange}
                 onEndDateChange={handleEndDateChange}
                 onUserChange={handleUserChange}

@@ -47,7 +47,7 @@ interface ProcessedCardData {
 interface ChartsProps {
     timeData: ProcessedCardData[];
     listMap: Record<string, string>;
-    memberMap: Record<string, string>;
+    memberMap: Record<string, { fullName: string; avatarUrl: string | null }>;
 }
 
 // Chart options (can be customized)
@@ -88,7 +88,7 @@ export default function Charts({ timeData, listMap, memberMap }: ChartsProps) {
         timeData.forEach(card => {
             card.timeEntries.forEach(entry => {
                 const userId = entry.memberId || 'unknown';
-                const userName = memberMap[userId] || 'Nieznany Użytkownik';
+                const userName = userId && memberMap[userId] ? memberMap[userId].fullName : 'Nieznany Użytkownik';
                 hoursByUser[userName] = (hoursByUser[userName] || 0) + (entry.hours || 0);
             });
         });

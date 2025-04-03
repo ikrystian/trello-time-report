@@ -105,8 +105,8 @@ export async function GET(
         axios.get<{ id: string; name: string }[]>(`${TRELLO_API_BASE_URL}/boards/${boardId}/lists`, {
           params: { ...trelloAuth, fields: 'id,name' },
         }),
-        axios.get<{ id: string; fullName: string }[]>(`${TRELLO_API_BASE_URL}/boards/${boardId}/members`, {
-          params: { ...trelloAuth, fields: 'id,fullName' },
+        axios.get<{ id: string; fullName: string; avatarHash?: string }[]>(`${TRELLO_API_BASE_URL}/boards/${boardId}/members`, {
+          params: { ...trelloAuth, fields: 'id,fullName,avatarHash' },
         }),
         axios.get<TrelloLabel[]>(`${TRELLO_API_BASE_URL}/boards/${boardId}/labels`, {
           params: { ...trelloAuth, fields: 'id,name,color' },
@@ -125,9 +125,18 @@ export async function GET(
     }, {} as Record<string, string>);
 
     const memberMap = members.reduce((map, member) => {
-      map[member.id] = member.fullName;
+      // Generate avatar URL using Trello's avatar hash
+      const avatarUrl = member.avatarHash
+        ? `https://trello-members.s3.amazonaws.com/${member.id}/${member.avatarHash}/50.png`
+        : null;
+
+      // Store both name and avatar URL
+      map[member.id] = {
+        fullName: member.fullName,
+        avatarUrl
+      };
       return map;
-    }, {} as Record<string, string>);
+    }, {} as Record<string, { fullName: string; avatarUrl: string | null }>);
 
     // Process card data
     const processedCardData: ProcessedCardData[] = cards

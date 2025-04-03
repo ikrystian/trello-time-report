@@ -7,6 +7,7 @@ import { DateRange } from "react-day-picker"; // Import DateRange
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
+import { ExportButton } from "@/components/ExportButton"; // Import ExportButton
 import {
   Popover,
   PopoverContent,
@@ -20,6 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { ProcessedCardData } from '@/types/time-report';
 
 // Define interfaces from parent or common types file
 interface TrelloLabel {
@@ -29,13 +31,15 @@ interface TrelloLabel {
 }
 
 interface FiltersProps {
-    memberMap: Record<string, string>;
+    memberMap: Record<string, { fullName: string; avatarUrl: string | null }>;
     boardLabels: TrelloLabel[];
     startDate: Date | null;
     endDate: Date | null;
     selectedUserId: string;
     selectedLabelId: string;
     isLoading: boolean;
+    timeData?: ProcessedCardData[]; // Data for export
+    listMap?: Record<string, string>; // List map for export
     onStartDateChange: (date: Date | null) => void;
     onEndDateChange: (date: Date | null) => void;
     onUserChange: (userId: string) => void;
@@ -51,6 +55,8 @@ export default function Filters({
     selectedUserId,
     selectedLabelId,
     isLoading,
+    timeData = [],
+    listMap = {},
     onStartDateChange,
     onEndDateChange,
     onUserChange,
@@ -59,8 +65,8 @@ export default function Filters({
 }: FiltersProps) {
 
     // Sort members and labels for dropdowns
-    const sortedMembers = Object.entries(memberMap).sort(([, nameA], [, nameB]) =>
-        nameA.localeCompare(nameB)
+    const sortedMembers = Object.entries(memberMap).sort(([, memberA], [, memberB]) =>
+        memberA.fullName.localeCompare(memberB.fullName)
     );
     const sortedLabels = [...boardLabels].sort((a, b) =>
         (a.name || '').localeCompare(b.name || '', undefined, { sensitivity: 'base' })
@@ -145,9 +151,9 @@ export default function Filters({
                     </SelectTrigger>
                     <SelectContent>
                         {/* Removed: <SelectItem value="">Wszyscy Użytkownicy</SelectItem> */}
-                        {sortedMembers.map(([id, name]) => (
+                        {sortedMembers.map(([id, member]) => (
                             <SelectItem key={id} value={id}>
-                                {name}
+                                {member.fullName}
                             </SelectItem>
                         ))}
                     </SelectContent>
@@ -176,20 +182,23 @@ export default function Filters({
                 </Select>
             </div>
 
-            {/* Apply Button */}
-            <div className="flex items-end"> {/* Align button with the bottom of other filters */}
-                 {/* This button might not be strictly necessary if useEffect triggers on filter changes,
-                     but keeping it provides explicit user control like the original */}
+            {/* Apply Button and Export Button */}
+            <div className="flex items-end gap-2"> {/* Align buttons with the bottom of other filters */}
                 <Button
                     onClick={onApplyFilters}
                     disabled={isLoading}
                 >
                     {isLoading ? 'Ładowanie...' : 'Zastosuj Filtry'}
                 </Button>
-                 {/* TODO: Add Export CSV Button */}
-                 {/* <Button variant="outline" className="ml-2" disabled={isLoading}>
-                    Eksportuj CSV
-                 </button> */}
+
+                {/* Export Button */}
+                {timeData.length > 0 && (
+                    <ExportButton
+                        timeData={timeData}
+                        listMap={listMap}
+                        memberMap={memberMap}
+                    />
+                )}
             </div>
         </div>
     );

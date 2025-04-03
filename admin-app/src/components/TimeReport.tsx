@@ -4,6 +4,12 @@ import React, { useMemo, useState } from 'react'; // Added useState
 import { formatDatePL } from '@/lib/date-utils'; // Use date-fns for date formatting
 import { Button } from "@/components/ui/button"; // Import Button
 import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from "@/components/ui/tooltip"; // Import Tooltip components
+import {
     Table,
     TableBody,
     TableCell,
@@ -11,6 +17,12 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table";
+import {
+    Card,
+    CardContent,
+    CardHeader,
+    CardTitle,
+} from "@/components/ui/card";
 // Removed Button import as toggle button is removed
 import {
     Accordion,
@@ -19,35 +31,13 @@ import {
     AccordionTrigger,
 } from "@/components/ui/accordion"; // Import Accordion components
 
-// Interfaces (can be moved to a common types file)
-interface TimeEntry {
-    memberId?: string;
-    date?: string;
-    hours: number;
-    comment: string;
-}
-
-interface TrelloLabel {
-    id: string;
-    name: string;
-    color: string;
-}
-
-interface ProcessedCardData {
-    cardId: string;
-    cardName: string;
-    cardUrl: string;
-    listId: string;
-    memberIds: string[];
-    labels: TrelloLabel[];
-    estimatedHours: number;
-    timeEntries: TimeEntry[];
-}
+// Import types from types file
+import { ProcessedCardData } from '@/types/time-report';
 
 interface TimeReportProps {
     timeData: ProcessedCardData[];
     listMap: Record<string, string>;
-    memberMap: Record<string, string>;
+    memberMap: Record<string, { fullName: string; avatarUrl: string | null }>;
 }
 
 // Helper function to format hours with 2 decimal places
@@ -92,7 +82,7 @@ function getTrelloLabelColor(color: string | undefined): string {
 
 interface CardGroupProps {
     card: ProcessedCardData & { totalReportedHours: number }; // Add calculated total
-    memberMap: Record<string, string>;
+    memberMap: Record<string, { fullName: string; avatarUrl: string | null }>;
     // defaultOpen prop is no longer needed for Accordion
 }
 
@@ -150,12 +140,35 @@ function CardGroup({ card, memberMap }: CardGroupProps) {
                         </TableHeader>
                         <TableBody>
                             {sortedEntries.map((entry, index) => {
-                                const userName = entry.memberId ? memberMap[entry.memberId] || entry.memberId : 'B/D';
+                                const userName = entry.memberId ? memberMap[entry.memberId]?.fullName || entry.memberId : 'B/D';
                                 const dateStr = formatDate(entry.date);
                                 const hoursStr = formatHours(entry.hours);
                                 return (
                                     <TableRow key={`${entry.date}-${entry.memberId}-${index}`}>
-                                        <TableCell className="font-medium text-sm">{userName}</TableCell>
+                                        <TableCell className="font-medium text-sm">
+                                    <TooltipProvider>
+                                        <Tooltip>
+                                            <TooltipTrigger asChild>
+                                                <div className="flex items-center gap-2">
+                                                    {entry.memberId && memberMap[entry.memberId]?.avatarUrl ? (
+                                                        <img
+                                                            src={memberMap[entry.memberId].avatarUrl || ''}
+                                                            alt={memberMap[entry.memberId].fullName}
+                                                            className="w-6 h-6 rounded-full"
+                                                        />
+                                                    ) : (
+                                                        <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center text-xs">
+                                                            {userName.charAt(0)}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </TooltipTrigger>
+                                            <TooltipContent>
+                                                <p>{userName}</p>
+                                            </TooltipContent>
+                                        </Tooltip>
+                                    </TooltipProvider>
+                                </TableCell>
                                         <TableCell className="text-sm">{dateStr}</TableCell>
                                         <TableCell className="text-right text-sm">{hoursStr}h</TableCell>
                                         <TableCell className="text-sm">{entry.comment || ''}</TableCell>
@@ -173,11 +186,128 @@ function CardGroup({ card, memberMap }: CardGroupProps) {
 }
 
 
+// --- Report Summary Component ---
+
+interface ReportSummaryProps {
+    totalPlannedHours: number;
+    totalLoggedHours: number;
+    totalTasks: number;
+    hoursByLabel: Record<string, { name: string; color: string; hours: number }>;
+}
+
+function ReportSummary({ totalPlannedHours, totalLoggedHours, totalTasks, hoursByLabel }: ReportSummaryProps) {
+    return (
+        <Card className="mb-6">
+            <CardHeader className="pb-3">
+                <CardTitle>Podsumowanie raportu</CardTitle>
+            </CardHeader>
+            <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                    <div className="p-4 rounded-lg border bg-card">
+                        <h3 className="text-sm font-medium text-muted-foreground mb-1">Zaplanowane godziny</h3>
+                        <p className="text-2xl font-bold">{formatHours(totalPlannedHours)}h</p>
+                    </div>
+                    <div className="p-4 rounded-lg border bg-card">
+                        <h3 className="text-sm font-medium text-muted-foreground mb-1">Zaraportowane godziny</h3>
+                        <p className="text-2xl font-bold">{formatHours(totalLoggedHours)}h</p>
+                    </div>
+                    <div className="p-4 rounded-lg border bg-card">
+                        <h3 className="text-sm font-medium text-muted-foreground mb-1">Liczba zadań</h3>
+                        <p className="text-2xl font-bold">{totalTasks}</p>
+                    </div>
+                </div>
+
+                {Object.keys(hoursByLabel).length > 0 && (
+                    <div>
+                        <h3 className="text-sm font-medium mb-2">Godziny według etykiet</h3>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+                            {Object.entries(hoursByLabel)
+                                .sort(([, a], [, b]) => b.hours - a.hours)
+                                .map(([labelId, label]) => (
+                                    <div key={labelId} className="flex items-center gap-2 p-2 rounded-md border">
+                                        <div
+                                            className="w-4 h-4 rounded-sm flex-shrink-0"
+                                            style={{ backgroundColor: getTrelloLabelColor(label.color) }}
+                                        />
+                                        <span className="text-sm truncate flex-grow">
+                                            {label.name || `(${label.color})`}
+                                        </span>
+                                        <span className="text-sm font-medium">{formatHours(label.hours)}h</span>
+                                    </div>
+                                ))
+                            }
+                        </div>
+                    </div>
+                )}
+            </CardContent>
+        </Card>
+    );
+}
+
 // --- Main TimeReport Component ---
 
 export default function TimeReport({ timeData, listMap, memberMap }: TimeReportProps) {
+    // Calculate summary data
+    const summaryData = useMemo(() => {
+        let totalPlannedHours = 0;
+        let totalLoggedHours = 0;
+        const hoursByLabel: Record<string, { name: string; color: string; hours: number }> = {};
+
+        // Calculate hours by label and totals
+        timeData.forEach(card => {
+            // Add to total planned hours
+            totalPlannedHours += card.estimatedHours || 0;
+
+            // Calculate reported hours for this card
+            const cardReportedHours = card.timeEntries.reduce(
+                (sum, entry) => sum + (entry.hours || 0),
+                0
+            );
+
+            // Add to total logged hours
+            totalLoggedHours += cardReportedHours;
+
+            // Process labels
+            if (cardReportedHours > 0 && card.labels && card.labels.length > 0) {
+                // Distribute hours equally among all labels of the card
+                const hoursPerLabel = cardReportedHours / card.labels.length;
+
+                card.labels.forEach(label => {
+                    if (!hoursByLabel[label.id]) {
+                        hoursByLabel[label.id] = {
+                            name: label.name,
+                            color: label.color,
+                            hours: 0
+                        };
+                    }
+                    hoursByLabel[label.id].hours += hoursPerLabel;
+                });
+            }
+        });
+
+        // Count total number of tasks (cards with time entries)
+        const totalTasks = timeData.filter(card =>
+            card.timeEntries.some(entry => entry.hours > 0)
+        ).length;
+
+        return {
+            totalPlannedHours,
+            totalLoggedHours,
+            totalTasks,
+            hoursByLabel
+        };
+    }, [timeData]);
+
+    // Define the type for grouped data
+    type ListGroup = {
+        listName: string;
+        cards: (ProcessedCardData & { totalReportedHours: number })[];
+        totalReportedHours: number;
+        totalEstimatedHours: number;
+    };
+
     // Group and sort data
-    const groupedAndSortedData = useMemo(() => {
+    const groupedAndSortedData = useMemo<ListGroup[]>(() => {
         if (!timeData || timeData.length === 0) return [];
 
         const groupedByList = timeData.reduce((acc, card) => {
@@ -215,13 +345,14 @@ export default function TimeReport({ timeData, listMap, memberMap }: TimeReportP
                 // Sort cards within each list
                 cards: listGroup.cards.sort((a, b) => a.cardName.localeCompare(b.cardName))
             }));
-
     }, [timeData, listMap]);
 
     // Calculate all possible list names and card IDs for expand/collapse all
-    const allListNames = useMemo(() => groupedAndSortedData.map(lg => lg.listName), [groupedAndSortedData]);
+    const allListNames = useMemo(() => groupedAndSortedData.map((lg: { listName: string }) => lg.listName), [groupedAndSortedData]);
     const allCardIds = useMemo(() => {
-        return groupedAndSortedData.flatMap(listGroup => listGroup.cards.map(card => card.cardId));
+        return groupedAndSortedData.flatMap((listGroup: { cards: { cardId: string }[] }) =>
+            listGroup.cards.map(card => card.cardId)
+        );
     }, [groupedAndSortedData]);
 
     // State to control open list accordions - expanded by default
@@ -256,7 +387,15 @@ export default function TimeReport({ timeData, listMap, memberMap }: TimeReportP
 
     return (
         <div className="w-full">
-            <div className="mb-4 flex justify-end">
+            {/* Report Summary */}
+            <ReportSummary
+                totalPlannedHours={summaryData.totalPlannedHours}
+                totalLoggedHours={summaryData.totalLoggedHours}
+                totalTasks={summaryData.totalTasks}
+                hoursByLabel={summaryData.hoursByLabel}
+            />
+
+            <div className="mb-4 flex justify-end items-center">
                 <Button variant="outline" size="sm" onClick={toggleAll}>
                     {isAllExpanded ? 'Zwiń wszystko' : 'Rozwiń wszystko'}
                 </Button>
