@@ -1,19 +1,19 @@
 import axios from 'axios';
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
+import { auth } from '@clerk/nextjs/server'; // Reverted import
 
 // Trello API configuration from environment variables
-const trelloAuth = {
+const trelloAuth = { // Reverted name
   key: process.env.TRELLO_API_KEY,
-  token: process.env.TRELLO_API_TOKEN,
+  token: process.env.TRELLO_API_TOKEN, // Reinstated static token
 };
 const TRELLO_POWERUP_ID = process.env.TRELLO_POWERUP_ID;
 const TRELLO_API_BASE_URL = 'https://api.trello.com/1';
 
 // Check if essential config is missing
-if (!trelloAuth.key || !trelloAuth.token || !TRELLO_POWERUP_ID) {
+if (!trelloAuth.key || !trelloAuth.token || !TRELLO_POWERUP_ID) { // Reverted check
   console.error(
-    'Error: Missing Trello API Key, Token, or Power-Up ID in environment variables.'
+    'Error: Missing Trello API Key, Token, or Power-Up ID in environment variables.' // Reverted message
   );
   // Handle missing config appropriately
 }
@@ -68,11 +68,16 @@ export async function GET(
   request: NextRequest,
   context: { params: Promise<{ boardId: string }> } // Use context object with Promise type
 ) {
+  // let userTrelloToken: string | null = null; // Removed user token variable
+
+  // --- Begin Reverted Auth Check ---
   const { userId: clerkUserId } = await auth(); // Get user ID from Clerk - Added await
 
   if (!clerkUserId) {
     return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
   }
+  // --- End Reverted Auth Check ---
+
 
   const { boardId } = await context.params; // Access boardId from context
   const { searchParams } = request.nextUrl;
@@ -83,7 +88,7 @@ export async function GET(
   const userId = searchParams.get('userId');
   const labelId = searchParams.get('labelId');
 
-  // Ensure credentials and Power-Up ID are present
+  // Ensure credentials and Power-Up ID are present (Reverted check)
   if (!trelloAuth.key || !trelloAuth.token || !TRELLO_POWERUP_ID) {
     return NextResponse.json(
       { message: 'Server configuration error: Missing Trello credentials or Power-Up ID.' },
@@ -97,19 +102,19 @@ export async function GET(
       await Promise.all([
         axios.get<TrelloCard[]>(`${TRELLO_API_BASE_URL}/boards/${boardId}/cards`, {
           params: {
-            ...trelloAuth,
+            ...trelloAuth, // Reverted to static auth
             fields: 'id,name,idList,idMembers,labels,url',
             pluginData: true, // Crucial for getting Power-Up data
           },
         }),
         axios.get<{ id: string; name: string }[]>(`${TRELLO_API_BASE_URL}/boards/${boardId}/lists`, {
-          params: { ...trelloAuth, fields: 'id,name' },
+          params: { ...trelloAuth, fields: 'id,name' }, // Reverted to static auth
         }),
         axios.get<{ id: string; fullName: string; avatarHash?: string }[]>(`${TRELLO_API_BASE_URL}/boards/${boardId}/members`, {
-          params: { ...trelloAuth, fields: 'id,fullName,avatarHash' },
+          params: { ...trelloAuth, fields: 'id,fullName,avatarHash' }, // Reverted to static auth
         }),
         axios.get<TrelloLabel[]>(`${TRELLO_API_BASE_URL}/boards/${boardId}/labels`, {
-          params: { ...trelloAuth, fields: 'id,name,color' },
+          params: { ...trelloAuth, fields: 'id,name,color' }, // Reverted to static auth
         }),
       ]);
 

@@ -1,6 +1,6 @@
 'use client'; // This remains a client component
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react'; // Removed useCallback
 import axios from 'axios';
 import { useAuth } from "@clerk/nextjs";
 import AdminPanel from '@/components/AdminPanel';
@@ -25,6 +25,8 @@ import {
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Dictionary } from '@/lib/dictionaries'; // Assuming Dictionary type exists
+// import Link from 'next/link'; // Removed unused import
+// import { Loader2 } from 'lucide-react'; // Removed unused import
 
 // Define the structure of a board object
 interface Board {
@@ -53,10 +55,12 @@ export default function DashboardClientContent({ dictionary }: DashboardClientCo
   const [selectedToDate, setSelectedToDate] = useState<Date>(lastDayOfMonth);
   const [selectedUserId, setSelectedUserId] = useState<string>('');
   const [selectedLabel, setSelectedLabel] = useState<string>('');
-  const [isLoadingBoards, setIsLoadingBoards] = useState<boolean>(true);
+  const [isLoadingBoards, setIsLoadingBoards] = useState<boolean>(true); // Reverted initial state
   const [errorBoards, setErrorBoards] = useState<string | null>(null);
+  // Removed Trello connection state variables
 
-  // Redirect if not authenticated
+  // Function to fetch boards (Reverted to original structure)
+  // Reverted useEffect structure
   useEffect(() => {
     if (!isLoaded) return;
 
@@ -66,7 +70,7 @@ export default function DashboardClientContent({ dictionary }: DashboardClientCo
       return;
     }
 
-    const fetchBoards = async () => {
+    const fetchBoards = async () => { // Moved fetchBoards back inside useEffect
       setIsLoadingBoards(true);
       setErrorBoards(null);
       try {
@@ -100,7 +104,7 @@ export default function DashboardClientContent({ dictionary }: DashboardClientCo
     };
 
     fetchBoards();
-  }, [isLoaded, userId, dictionary]); // Remove lang from dependency array
+  }, [isLoaded, userId, dictionary]); // Reverted dependencies
 
   // Effect to load board selection from localStorage
   useEffect(() => {
@@ -164,12 +168,16 @@ export default function DashboardClientContent({ dictionary }: DashboardClientCo
   // DashboardHeader expects { title: string }
   const headerDict = { title: dictionary.dashboard?.title || 'Dashboard' };
 
+  // Removed Trello status check rendering logic
+
+  // Render main dashboard content (original structure)
   return (
     <PageTransition>
       <div className="flex min-h-screen flex-col">
         {/* Pass the specific dictionary part needed by the header */}
         <DashboardHeader dictionary={headerDict} />
         <main className="flex-1 container mx-auto max-w-7xl py-6 md:py-12">
+        {/* Render board selector and AdminPanel only if trelloConnected is true */}
         <>
           <Card className="w-full max-w-7xl mx-auto mb-6">
             <CardHeader>

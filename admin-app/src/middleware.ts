@@ -1,41 +1,26 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
-import { NextResponse } from 'next/server';
-// Removed unused imports: NextRequest, matchLocale, Negotiator, locales
-
-// Removed unused getLocale function
+// Removed unused NextResponse import
 
 // Define public routes using createRouteMatcher
+// Note: API routes are included here as public. If specific API routes need protection,
+// they should be removed from this list and handled differently (e.g., checking auth within the route handler).
 const isPublicRoute = createRouteMatcher([
   '/', // Root landing page
   '/sign-in(.*)', // Sign-in routes
   '/sign-up(.*)', // Sign-up routes
-  '/api/(.*)', // Allow all API routes for now (adjust if needed)
+  '/api/(.*)', // Treat all API routes as public in the middleware layer
 ]);
 
-export default clerkMiddleware((auth, request) => {
-  // --- Debugging Log ---
-  const path = request.nextUrl.pathname;
-  console.log(`Middleware triggered for path: ${path}`);
-  console.log("Middleware - NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY:", process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY ? "Loaded" : "MISSING");
-  // --- End Debugging Log ---
-
-  // Check if the route is public BEFORE i18n logic
-  if (isPublicRoute(request)) {
-    console.log(`Path ${path} is public.`);
-    // Allow public route access - Clerk handles its own routes like sign-in
-    // We will add back i18n redirection for root/missing locale later
-    return NextResponse.next(); // Proceed without protection
+export default clerkMiddleware((auth, req) => {
+  // Check if the route is NOT public. If it's not public, protect it.
+  if (!isPublicRoute(req)) {
+    auth.protect(); // Correct: Call protect directly on the auth object provided by the middleware
   }
-
-  // If it's not a public route, protect it
-  console.log(`Path ${path} is protected. Running auth.protect().`);
-  auth.protect(); // Protect the route - Call protect on the auth object directly
-
-  // If protected and authenticated, proceed
-  return NextResponse.next();
+  // For public routes or authenticated protected routes, the middleware implicitly allows the request to proceed.
+  // No explicit NextResponse.next() is needed here after the protect() call.
 });
 
 export const config = {
-  // Matcher remains the same
-  matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)', '/'],
+  // Updated matcher to include API routes while excluding static files/internal paths
+  matcher: ['/((?!.*\\..*|_next).*)', '/', '/(api|trpc)(.*)'],
 };

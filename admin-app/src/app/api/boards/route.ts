@@ -1,17 +1,17 @@
 import axios from 'axios';
 import { NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
+import { auth } from '@clerk/nextjs/server'; // Reverted import
 
 // Basic Trello API authentication parameters from environment variables
-const trelloAuth = {
+const trelloAuth = { // Reverted name
   key: process.env.TRELLO_API_KEY,
-  token: process.env.TRELLO_API_TOKEN,
+  token: process.env.TRELLO_API_TOKEN, // Reinstated static token
 };
 
 const TRELLO_API_BASE_URL = 'https://api.trello.com/1';
 
 // Check if essential config is missing on server startup (can also be checked here)
-if (!trelloAuth.key || !trelloAuth.token) {
+if (!trelloAuth.key || !trelloAuth.token) { // Reverted check
   console.error('Error: Missing Trello API Key or Token in environment variables.');
   // In a real app, you might want a more robust way to handle this
   // For now, we'll let requests fail if keys are missing.
@@ -19,6 +19,8 @@ if (!trelloAuth.key || !trelloAuth.token) {
 
 export async function GET() {
   let userId: string | null = null;
+  // let userTrelloToken: string | null = null; // Removed user token variable
+
   try {
     const authResult = await auth(); // Get user ID from Clerk
     userId = authResult.userId;
@@ -28,13 +30,18 @@ export async function GET() {
       console.error('API Route: /api/boards - Unauthorized access attempt.');
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
+
+    // Removed Clerk metadata fetching logic
+
   } catch (clerkError) {
-    console.error('API Route: /api/boards - Error during Clerk auth():', clerkError);
-    return NextResponse.json({ message: 'Authentication error.' }, { status: 500 });
+    // console.error('API Route: /api/boards - Error during Clerk auth() or fetching metadata:', clerkError); // Original error message
+    console.error('API Route: /api/boards - Error during Clerk auth():', clerkError); // Reverted error message
+    // return NextResponse.json({ message: 'Authentication or user data error.' }, { status: 500 }); // Original error response
+    return NextResponse.json({ message: 'Authentication error.' }, { status: 500 }); // Reverted error response
   }
 
 
-  // Ensure keys are present before making the request
+  // Ensure keys are present before making the request (Reverted check)
   if (!trelloAuth.key || !trelloAuth.token) {
     return NextResponse.json(
       { message: 'Server configuration error: Missing Trello credentials.' },
@@ -48,7 +55,7 @@ export async function GET() {
       `${TRELLO_API_BASE_URL}/members/me/boards`,
       {
         params: {
-          ...trelloAuth,
+          ...trelloAuth, // Reverted to using static trelloAuth object
           fields: 'id,name,closed', // Fetch id, name, and closed status
         },
         // Add timeout for robustness

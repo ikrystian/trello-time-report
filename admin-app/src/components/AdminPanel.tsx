@@ -10,6 +10,8 @@ import { SkeletonAccordion } from './SkeletonAccordion';
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
+// import { Button } from "@/components/ui/button"; // Removed unused import
+// import Link from 'next/link'; // Removed unused import
 
 // Define interfaces based on the API response structure (keep as is)
 interface TimeEntry {
@@ -70,6 +72,7 @@ export interface AdminPanelDictionary {
         timeReportSection: TimeReportDictionary;
         chartsSection: ChartsDictionary;
         exportButtonSection: ExportButtonDictionary; // Add export button section
+        // Removed connectTrello and trelloAuthRequired as they are handled upstream
     };
     common: {
         loading: string;
@@ -110,6 +113,7 @@ export default function AdminPanel({
     const [boardLabels, setBoardLabels] = useState<TrelloLabel[]>([]);
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
+    // const [needsTrelloAuth, setNeedsTrelloAuth] = useState<boolean>(false); // Removed unused state
 
     // Initialize filter states with props or defaults
     const [startDate, setStartDate] = useState<Date | null>(fromDate || null);
@@ -159,6 +163,7 @@ export default function AdminPanel({
 
         setIsLoading(true);
         setError(null);
+        // setNeedsTrelloAuth(false); // Removed unused state update
 
         // Construct query parameters based on filter state
         const params = new URLSearchParams();
@@ -180,14 +185,20 @@ export default function AdminPanel({
             console.error('Error fetching time data:', err);
             // Use dictionary for error message
             let message = dictionary.dashboard.errorFetchingTimeData || 'Failed to fetch time data.';
-             if (axios.isAxiosError(err) && err.response?.data?.message) {
-                 message = err.response.data.message;
+             if (axios.isAxiosError(err)) {
+                 // Check for specific Trello auth error (This check is now redundant as it's handled upstream)
+                 // if (err.response?.status === 403 && err.response?.data?.needsTrelloAuth) {
+                 //     setNeedsTrelloAuth(true);
+                 //     message = dictionary.dashboard.trelloAuthRequired || 'Trello connection required.'; // Use dictionary
+                 // } else {
+                     message = err.response?.data?.message || err.message;
+                 // }
              } else if (err instanceof Error) {
                  message = err.message;
              }
-            setError(message);
+            setError(message); // Set the error message (might be the auth required message)
             // Clear data on error
-            setTimeData([]); // Keep clearing data
+            setTimeData([]);
             setListMap({});
             setMemberMap({});
             setBoardLabels([]);
@@ -233,9 +244,13 @@ export default function AdminPanel({
                     <SkeletonAccordion listCount={3} cardCount={4} />
                 </div>
             )}
-            {/* Use dictionary for error display */}
+            {/* Display Trello Connect button if needed (This is now handled upstream) */}
+            {/* {needsTrelloAuth && ( ... )} */}
+
+            {/* Display general error */}
             {error && <p className="text-center text-destructive py-4">{`${dictionary.common.error}: ${error}`}</p>}
 
+            {/* Only show tabs/data if not loading and no error */}
             {!isLoading && !error && timeData.length > 0 && (
                  <Tabs defaultValue="report" className="w-full mt-4" onValueChange={setActiveTab} value={activeTab}>
                     <TabsList className="grid w-full grid-cols-2">
@@ -289,7 +304,7 @@ export default function AdminPanel({
                     </TabsContent>
                  </Tabs>
             )}
-            {/* Use dictionary for no entries message */}
+            {/* Use dictionary for no entries message (only show if not loading/error) */}
             {!isLoading && !error && timeData.length === 0 && (
                  <p className="text-center text-muted-foreground py-4">{dictionary.dashboard.noEntriesFound}</p>
             )}

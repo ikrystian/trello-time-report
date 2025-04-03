@@ -234,7 +234,9 @@
       "downloadingFile": "Pobieranie pliku {format}...",
       "downloadFolderInfo": "Plik zostanie zapisany w folderze pobierania",
       "exportError": "Błąd podczas eksportu do {format}"
-    }
+    },
+    "connectTrello": "Połącz konto Trello",
+    "trelloAuthRequired": "Wymagane połączenie z Trello, aby pobrać dane."
   },
   "header": {
     "dashboard": "Panel",

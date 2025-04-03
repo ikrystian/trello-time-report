@@ -2,8 +2,8 @@
 
 import { UserButton } from '@clerk/nextjs';
 import { Clock } from 'lucide-react';
-import { ThemeSwitcher } from '@/components/ThemeSwitcher';
-import { LanguageSwitcher } from '@/components/LanguageSwitcher'; // Import LanguageSwitcher
+import { ThemeSwitcher } from './ThemeSwitcher'; // Use relative path
+// import { LanguageSwitcher } from './LanguageSwitcher'; // Removed import as file is missing
 
 // Define the expected dictionary structure for this component
 interface DashboardHeaderDictionary {
@@ -28,7 +28,7 @@ export default function DashboardHeader({ dictionary }: DashboardHeaderProps) {
         </div>
 
         <div className="flex items-center gap-4">
-          <LanguageSwitcher /> {/* Add LanguageSwitcher */}
+          {/* <LanguageSwitcher /> */} {/* Removed usage */}
           <ThemeSwitcher />
           <UserButton
             appearance={{
