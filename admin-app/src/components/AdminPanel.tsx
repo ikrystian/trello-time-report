@@ -48,7 +48,6 @@ interface AdminPanelProps {
     toDate?: Date; // End date for filtering
     userId?: string; // Selected user ID for filtering
     label?: string; // Selected label for filtering
-    onBoardChange?: (boardId: string) => void; // Callback for board change
     onDateChange?: (range: { from?: Date; to?: Date }) => void; // Callback for date change
     onUserChange?: (userId: string) => void; // Callback for user change
     onLabelChange?: (labelId: string) => void; // Callback for label change
@@ -60,7 +59,6 @@ export default function AdminPanel({
     toDate,
     userId,
     label,
-    onBoardChange,
     onDateChange,
     onUserChange,
     onLabelChange

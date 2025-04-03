@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useMemo, useState } from 'react'; // Added useState
+import Image from 'next/image'; // Import Next.js Image component
 import { formatDatePL } from '@/lib/date-utils'; // Use date-fns for date formatting
 import { Button } from "@/components/ui/button"; // Import Button
 import {
@@ -151,10 +152,12 @@ function CardGroup({ card, memberMap }: CardGroupProps) {
                                             <TooltipTrigger asChild>
                                                 <div className="flex items-center gap-2">
                                                     {entry.memberId && memberMap[entry.memberId]?.avatarUrl ? (
-                                                        <img
-                                                            src={memberMap[entry.memberId].avatarUrl || ''}
-                                                            alt={memberMap[entry.memberId].fullName}
-                                                            className="w-6 h-6 rounded-full"
+                                                        <Image
+                                                            src={memberMap[entry.memberId].avatarUrl!} // Add non-null assertion if confident it exists
+                                                            alt={memberMap[entry.memberId].fullName || 'Avatar'} // Provide default alt text
+                                                            width={24} // Corresponds to w-6
+                                                            height={24} // Corresponds to h-6
+                                                            className="rounded-full" // Keep the rounding
                                                         />
                                                     ) : (
                                                         <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center text-xs">

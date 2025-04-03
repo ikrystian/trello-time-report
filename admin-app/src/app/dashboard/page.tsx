@@ -295,7 +295,6 @@ export default function DashboardPage() { // Renamed component
               toDate={selectedToDate}
               userId={selectedUserId}
               label={selectedLabel}
-              onBoardChange={handleBoardSelect}
               onDateChange={handleDateChange}
               onUserChange={handleUserSelect}
               onLabelChange={handleLabelSelect}

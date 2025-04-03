@@ -2,7 +2,7 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
-import html2canvas from 'html2canvas';
+// Removed unused html2canvas import
 import { ProcessedCardData } from '@/types/time-report';
 
 // Define the type for export formats
@@ -33,7 +33,7 @@ export async function exportToPDF(
   doc.text(`Generated on: ${new Date().toLocaleDateString('pl-PL')}`, 14, 30);
 
   // Prepare data for tables
-  const tableData: any[] = [];
+  const tableData: string[][] = []; // Use string[][] instead of any[]
 
   timeData.forEach(card => {
     const listName = listMap[card.listId] || 'Unknown List';
@@ -121,7 +121,8 @@ export function exportToExcel(
   memberMap: Record<string, { fullName: string; avatarUrl: string | null }>
 ): void {
   const headers = ['List', 'Card', 'Card URL', 'Estimated Hours', 'User', 'Date', 'Reported Hours', 'Comment'];
-  const rows: any[][] = [headers];
+  // Use a more specific type for rows, allowing string, number, or Date | null
+  const rows: (string | number | Date | null)[][] = [headers];
 
   // Add data rows
   timeData.forEach(card => {
