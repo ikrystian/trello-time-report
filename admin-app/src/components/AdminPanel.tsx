@@ -5,6 +5,8 @@ import axios from 'axios';
 import Filters from './Filters'; // Import the Filters component
 import TimeReport from './TimeReport'; // Import the TimeReport component
 import Charts from './Charts'; // Import the Charts component
+import { SkeletonAccordion } from './SkeletonAccordion'; // Import SkeletonAccordion component
+import { Skeleton } from "@/components/ui/skeleton"; // Import Skeleton component
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"; // Import shadcn Tabs
 import { Card, CardContent } from "@/components/ui/card"; // Import Card components
 
@@ -178,7 +180,11 @@ export default function AdminPanel({
             />
 
             {/* Display loading/error specifically for the data section */}
-            {isLoading && !timeData.length && <p className="text-center">Ładowanie danych...</p>}
+            {isLoading && !timeData.length && (
+                <div className="mt-6">
+                    <SkeletonAccordion listCount={3} cardCount={4} />
+                </div>
+            )}
             {error && <p className="text-center text-destructive py-4">Błąd: {error}</p>}
 
             {!isLoading && !error && timeData.length > 0 && (
@@ -189,18 +195,39 @@ export default function AdminPanel({
                         ))}
                     </TabsList>
                     <TabsContent value="report">
-                        <TimeReport
-                            timeData={timeData}
-                            listMap={listMap}
-                            memberMap={memberMap}
-                        />
+                        {isLoading && timeData.length > 0 ? (
+                            <div className="mt-6">
+                                <SkeletonAccordion listCount={2} cardCount={3} />
+                            </div>
+                        ) : (
+                            <TimeReport
+                                timeData={timeData}
+                                listMap={listMap}
+                                memberMap={memberMap}
+                            />
+                        )}
                     </TabsContent>
                     <TabsContent value="charts">
-                        <Charts
-                            timeData={timeData}
-                            listMap={listMap}
-                            memberMap={memberMap}
-                        />
+                        {isLoading && timeData.length > 0 ? (
+                            <div className="mt-6 p-4">
+                                <div className="space-y-6">
+                                    <div className="space-y-2">
+                                        <Skeleton className="h-8 w-48" />
+                                        <Skeleton className="h-64 w-full rounded-lg" />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Skeleton className="h-8 w-48" />
+                                        <Skeleton className="h-64 w-full rounded-lg" />
+                                    </div>
+                                </div>
+                            </div>
+                        ) : (
+                            <Charts
+                                timeData={timeData}
+                                listMap={listMap}
+                                memberMap={memberMap}
+                            />
+                        )}
                     </TabsContent>
                  </Tabs>
             )}
