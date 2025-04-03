@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react'; // Add useState, useEffect
 import { format } from "date-fns"; // Remove addDays
+import { pl } from 'date-fns/locale/pl'; // Import Polish locale
 import { Calendar as CalendarIcon } from "lucide-react";
 import { DateRange } from "react-day-picker"; // Import DateRange
 import { cn } from "@/lib/utils";
@@ -111,31 +112,32 @@ export default function Filters({
                             disabled={isLoading}
                         >
                             <CalendarIcon className="mr-2 h-4 w-4" />
-                            {dateRange?.from ? (
-                                dateRange.to ? (
-                                    <>
-                                        {format(dateRange.from, "LLL dd, y")} -{" "}
-                                        {format(dateRange.to, "LLL dd, y")}
-                                    </>
-                                ) : (
-                                    format(dateRange.from, "LLL dd, y")
-                                )
-                            ) : (
-                                <span>Wybierz zakres dat</span>
-                            )}
-                        </Button>
-                    </PopoverTrigger>
+                             {dateRange?.from ? (
+                                 dateRange.to ? (
+                                     <>
+                                         {format(dateRange.from, "d MMM yyyy", { locale: pl })} -{" "}
+                                         {format(dateRange.to, "d MMM yyyy", { locale: pl })}
+                                     </>
+                                 ) : (
+                                     format(dateRange.from, "d MMM yyyy", { locale: pl })
+                                 )
+                             ) : (
+                                 <span>Wybierz zakres dat</span>
+                             )}
+                         </Button>
+                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="start">
                         <Calendar
                             initialFocus
                             mode="range"
                             defaultMonth={dateRange?.from}
-                            selected={dateRange}
-                            onSelect={setDateRange}
-                            numberOfMonths={2}
-                        />
-                    </PopoverContent>
-                </Popover>
+                             selected={dateRange}
+                             onSelect={setDateRange}
+                             numberOfMonths={2}
+                             locale={pl} // Add Polish locale
+                         />
+                     </PopoverContent>
+                 </Popover>
             </div>
 
             {/* User Filter */}
