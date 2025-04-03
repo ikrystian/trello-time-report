@@ -1,0 +1,250 @@
+{
+  "title": "Raport Czasu Trello",
+  "description": "Generuj wnikliwe raporty czasowe z Twoich tablic Trello.",
+  "signIn": "Zaloguj się",
+  "getStarted": "Zacznij",
+  "nav": {
+    "features": "Funkcje",
+    "pricing": "Cennik",
+    "faq": "FAQ"
+  },
+  "hero": {
+    "tagline": "Zwiększ produktywność swojego zespołu",
+    "title1": "Śledź czas zadań w Trello",
+    "title2": "Bez wysiłku",
+    "description": "Idealne rozszerzenie dla zespołów, które potrzebują monitorować czas spędzony na zadaniach i generować szczegółowe raporty bezpośrednio z Trello.",
+    "buttonFree": "Zacznij za darmo",
+    "buttonLearn": "Dowiedz się więcej",
+    "imageAlt": "Zespół pracujący z Raportem Czasu Trello"
+  },
+  "features": {
+    "title": "Potężne funkcje",
+    "description": "Wszystko, czego potrzebujesz do śledzenia czasu i generowania raportów dla swoich tablic Trello.",
+    "card1": {
+      "title": "Szczegółowe Raporty",
+      "description": "Generuj kompleksowe raporty według tablicy, listy, członka zespołu lub okresu czasu. Eksportuj dane w wielu formatach.",
+      "item1": "Niestandardowe zakresy dat",
+      "item2": "Eksport do CSV/PDF",
+      "item3": "Filtrowanie według członka zespołu"
+    },
+    "card2": {
+      "title": "Analityka Zespołowa",
+      "description": "Wizualizuj produktywność swojego zespołu i identyfikuj wąskie gardła dzięki interaktywnym dashboardom.",
+      "item1": "Trendy produktywności",
+      "item2": "Rozkład obciążenia pracą",
+      "item3": "Wgląd w alokację czasu"
+    },
+    "card3": {
+      "title": "Śledzenie Czasu",
+      "description": "Łatwe rejestrowanie czasu spędzonego na zadaniach bezpośrednio z kart Trello. Automatyczne sumowanie i analiza.",
+      "item1": "Intuicyjny interfejs",
+      "item2": "Śledzenie w czasie rzeczywistym",
+      "item3": "Komentarze do wpisów czasowych"
+    },
+    "card4": {
+      "title": "Wizualizacja Danych",
+      "description": "Przekształć dane czasowe w przejrzyste wykresy i diagramy, które pomagają w podejmowaniu decyzji.",
+      "item1": "Wykresy kołowe i słupkowe",
+      "item2": "Wykresy trendów czasowych",
+      "item3": "Eksport wizualizacji"
+    },
+    "card5": {
+      "title": "Rozliczanie Projektów",
+      "description": "Automatycznie generuj raporty rozliczeniowe na podstawie zarejestrowanego czasu pracy.",
+      "item1": "Raporty fakturowania",
+      "item2": "Stawki godzinowe",
+      "item3": "Eksport do systemów księgowych"
+    },
+    "card6": {
+      "title": "Integracja z Trello",
+      "description": "Bezproblemowa integracja z Trello bez zakłócania istniejącego przepływu pracy.",
+      "item1": "Natywna integracja",
+      "item2": "Synchronizacja w czasie rzeczywistym",
+      "item3": "Brak dodatkowych konfiguracji"
+    }
+  },
+  "pricing": {
+    "title": "Przejrzyste ceny",
+    "description": "Wybierz plan, który najlepiej odpowiada potrzebom Twojego zespołu.",
+    "free": {
+      "title": "Darmowy",
+      "price": "0 zł",
+      "description": "Idealny do rozpoczęcia pracy",
+      "item1": "Do 3 tablic Trello",
+      "item2": "Podstawowe raporty",
+      "item3": "Eksport do CSV",
+      "item4": "1 użytkownik",
+      "button": "Zacznij za darmo"
+    },
+    "pro": {
+      "badge": "Popularny",
+      "title": "Pro",
+      "price": "49 zł",
+      "description": "miesięcznie za użytkownika",
+      "item1": "Nieograniczona liczba tablic",
+      "item2": "Zaawansowane raporty i wykresy",
+      "item3": "Eksport do CSV, PDF, Excel",
+      "item4": "Analityka zespołowa",
+      "item5": "Priorytetowe wsparcie",
+      "button": "Wybierz plan Pro"
+    },
+    "enterprise": {
+      "title": "Enterprise",
+      "price": "Kontakt",
+      "description": "Rozwiązanie dla dużych zespołów",
+      "item1": "Wszystko z planu Pro",
+      "item2": "Dedykowane wsparcie",
+      "item3": "Niestandardowe integracje",
+      "item4": "Zaawansowane zabezpieczenia",
+      "item5": "SLA i wsparcie 24/7",
+      "button": "Skontaktuj się z nami"
+    }
+  },
+  "faq": {
+    "title": "Często zadawane pytania",
+    "description": "Odpowiedzi na najczęściej zadawane pytania dotyczące Raportu Czasu Trello.",
+    "item1": {
+      "question": "Jak zacząć korzystać z Raportu Czasu Trello?",
+      "answer": "Aby rozpocząć, zarejestruj się za darmo, połącz swoje konto Trello i wybierz tablice, które chcesz monitorować. Nasz intuicyjny interfejs przeprowadzi Cię przez proces konfiguracji w kilka minut."
+    },
+    "item2": {
+      "question": "Czy mogę eksportować dane do innych formatów?",
+      "answer": "Tak, Raport Czasu Trello umożliwia eksport danych do formatów CSV, PDF i Excel. Możesz również zintegrować nasze API z innymi narzędziami do analizy danych."
+    },
+    "item3": {
+      "question": "Czy aplikacja działa na urządzeniach mobilnych?",
+      "answer": "Tak, nasza aplikacja jest w pełni responsywna i działa na wszystkich urządzeniach mobilnych. Możesz śledzić czas i przeglądać raporty z dowolnego miejsca."
+    },
+    "item4": {
+      "question": "Czy mogę śledzić czas dla wielu tablic Trello?",
+      "answer": "Oczywiście! Możesz śledzić czas dla nieograniczonej liczby tablic Trello. Nasze narzędzie pozwala na łatwe przełączanie się między tablicami i generowanie raportów zbiorczych."
+    },
+    "item5": {
+      "question": "Jak działa rozliczanie i jakie są plany cenowe?",
+      "answer": "Oferujemy darmowy plan startowy oraz plany premium z dodatkowymi funkcjami. Rozliczanie odbywa się miesięcznie lub rocznie, z rabatem przy płatności rocznej. Szczegółowe informacje znajdziesz w sekcji Cennik."
+    }
+  },
+  "footer": {
+    "description": "Generuj wnikliwe raporty czasowe z Twoich tablic Trello.",
+    "product": {
+      "title": "Produkt",
+      "features": "Funkcje",
+      "pricing": "Cennik",
+      "faq": "FAQ"
+    },
+    "company": {
+      "title": "Firma",
+      "about": "O nas",
+      "blog": "Blog",
+      "contact": "Kontakt"
+    },
+    "support": {
+      "title": "Wsparcie",
+      "docs": "Dokumentacja",
+      "help": "Centrum pomocy",
+      "status": "Status"
+    },
+    "copyright": "Wszelkie prawa zastrzeżone.",
+    "privacy": "Polityka Prywatności",
+    "terms": "Warunki Usługi"
+  },
+  "toast": {
+    "loggedOutTitle": "Wylogowano pomyślnie",
+    "loggedOutDescription": "Dziękujemy za korzystanie z Raportu Czasu Trello"
+  },
+  "dashboard": {
+    "title": "Panel",
+    "selectBoard": "Wybierz Tablicę",
+    "loadingBoards": "Ładowanie tablic...",
+    "noBoards": "Nie znaleziono tablic.",
+    "generateReport": "Generuj Raport",
+    "export": "Eksportuj",
+    "filters": "Filtry",
+    "dateRange": "Zakres Dat",
+    "startDate": "Data Początkowa",
+    "endDate": "Data Końcowa",
+    "timeReport": "Raport Czasu",
+    "loadingData": "Ładowanie danych czasowych...",
+    "noData": "Nie znaleziono wpisów czasu dla wybranych filtrów.",
+    "totalTime": "Całkowity Czas",
+    "charts": "Wykresy",
+    "boardSelectLabel": "Tablica",
+    "boardSelectPlaceholder": "-- Wybierz Tablicę --",
+    "boardSelectError": "Błąd",
+    "boardSelectLoading": "Ładowanie tablic...",
+    "boardSelectRetry": "Spróbuj ponownie",
+    "boardSelectNoBoardsFound": "Nie znaleziono tablic",
+    "boardSelectNoBoardsAccess": "Upewnij się, że masz dostęp do tablic w Trello",
+    "boardSelectActiveBoardsLabel": "Aktywne tablice",
+    "boardSelectClosedBoardsLabel": "Zamknięte tablice",
+    "boardSelectNoActiveBoards": "Brak aktywnych tablic",
+    "errorLoadingBoards": "Błąd ładowania tablic",
+    "errorFetchingTimeData": "Nie udało się pobrać danych czasu.",
+    "noEntriesFound": "Nie znaleziono wpisów czasu dla wybranych filtrów.",
+    "filtersSection": {
+      "dateRangeLabel": "Zakres Dat",
+      "datePickerPlaceholder": "Wybierz zakres dat",
+      "userFilterLabel": "Użytkownik",
+      "userFilterPlaceholder": "Wszyscy Użytkownicy",
+      "labelFilterLabel": "Etykieta",
+      "labelFilterPlaceholder": "Wszystkie Etykiety",
+      "applyButton": "Zastosuj Filtry",
+      "loadingButton": "Ładowanie...",
+      "noNameLabel": "(Brak Nazwy)"
+    },
+    "timeReportSection": {
+      "noData": "B/D",
+      "invalidDate": "Błędna data",
+      "unknownList": "Nieznana Lista",
+      "noTimeEntries": "Brak wpisów czasu.",
+      "summaryTitle": "Podsumowanie raportu",
+      "plannedHours": "Zaplanowane godziny",
+      "reportedHours": "Zaraportowane godziny",
+      "taskCount": "Liczba zadań",
+      "hoursByLabelTitle": "Godziny według etykiet",
+      "expandAll": "Rozwiń wszystko",
+      "collapseAll": "Zwiń wszystko",
+      "userHeader": "Użytkownik",
+      "dateHeader": "Data",
+      "hoursHeader": "Godziny",
+      "commentHeader": "Komentarz",
+      "openInTrello": "Otwórz kartę w Trello",
+      "estimated": "Szac",
+      "reported": "Rap"
+    },
+    "chartsSection": {
+      "hoursAxisLabel": "Godziny",
+      "reportedHoursLabel": "Zaraportowane Godziny",
+      "userHoursTitle": "Godziny na Użytkownika",
+      "listHoursTitle": "Godziny na Listę",
+      "unknownUser": "Nieznany Użytkownik",
+      "unknownList": "Nieznana Lista",
+      "noData": "Brak danych"
+    },
+    "exportButtonSection": {
+      "exportLabel": "Eksportuj",
+      "saveAsPDF": "Zapisz jako PDF",
+      "saveAsCSV": "Zapisz jako CSV",
+      "saveAsXLS": "Zapisz jako XLS",
+      "saveAsHTML": "Zapisz jako HTML",
+      "saveAsTXT": "Zapisz jako TXT",
+      "saveAsJSON": "Zapisz jako JSON",
+      "saveAsXML": "Zapisz jako XML",
+      "exportingTo": "Eksportowanie do {format}...",
+      "downloadingFile": "Pobieranie pliku {format}...",
+      "downloadFolderInfo": "Plik zostanie zapisany w folderze pobierania",
+      "exportError": "Błąd podczas eksportu do {format}"
+    }
+  },
+  "header": {
+    "dashboard": "Panel",
+    "theme": "Motyw",
+    "light": "Jasny",
+    "dark": "Ciemny",
+    "system": "Systemowy"
+  },
+  "common": {
+    "loading": "Ładowanie...",
+    "error": "Błąd"
+  }
+}

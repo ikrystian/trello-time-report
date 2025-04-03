@@ -1,14 +1,14 @@
 'use client';
 
-import React, { useState, useEffect } from 'react'; // Add useState, useEffect
-import { format } from "date-fns"; // Remove addDays
-import { pl } from 'date-fns/locale/pl'; // Import Polish locale
+import React, { useState, useEffect } from 'react';
+import { format } from "date-fns";
+import { pl } from 'date-fns/locale'; // Import only Polish locale
 import { Calendar as CalendarIcon } from "lucide-react";
-import { DateRange } from "react-day-picker"; // Import DateRange
+import { DateRange } from "react-day-picker";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
-import { ExportButton } from "@/components/ExportButton"; // Import ExportButton
+import { ExportButton, type ExportButtonDictionary } from "@/components/ExportButton"; // Re-add ExportButtonDictionary import
 import {
   Popover,
   PopoverContent,
@@ -31,6 +31,20 @@ interface TrelloLabel {
     color: string;
 }
 
+// Define dictionary structure for Filters
+export interface FiltersDictionary {
+    dateRangeLabel: string;
+    datePickerPlaceholder: string;
+    userFilterLabel: string;
+    userFilterPlaceholder: string;
+    labelFilterLabel: string;
+    labelFilterPlaceholder: string;
+    applyButton: string;
+    loadingButton: string;
+    noNameLabel: string;
+    // exportButtonSection: ExportButtonDictionary; // Removed: This belongs at the dashboard level, not within filters
+}
+
 interface FiltersProps {
     memberMap: Record<string, { fullName: string; avatarUrl: string | null }>;
     boardLabels: TrelloLabel[];
@@ -39,13 +53,16 @@ interface FiltersProps {
     selectedUserId: string;
     selectedLabelId: string;
     isLoading: boolean;
-    timeData?: ProcessedCardData[]; // Data for export
-    listMap?: Record<string, string>; // List map for export
+    timeData?: ProcessedCardData[];
+    listMap?: Record<string, string>;
     onStartDateChange: (date: Date | null) => void;
     onEndDateChange: (date: Date | null) => void;
     onUserChange: (userId: string) => void;
     onLabelChange: (labelId: string) => void;
-    onApplyFilters: () => void; // Function to trigger data fetch
+    onApplyFilters: () => void;
+    dictionary: FiltersDictionary; // Dictionary for Filters component itself
+    exportButtonDictionary: ExportButtonDictionary; // Dictionary specifically for ExportButton
+    // Remove lang: string;
 }
 
 export default function Filters({
@@ -63,7 +80,13 @@ export default function Filters({
     onUserChange,
     onLabelChange,
     onApplyFilters,
+    dictionary, // Destructure Filters dictionary
+    exportButtonDictionary, // Destructure ExportButton dictionary
+    // Remove lang,
 }: FiltersProps) {
+
+    // Set date-fns locale to Polish
+    const dateLocale = pl;
 
     // Sort members and labels for dropdowns
     const sortedMembers = Object.entries(memberMap).sort(([, memberA], [, memberB]) =>
@@ -99,7 +122,7 @@ export default function Filters({
         <div className="mb-6 p-4 border rounded flex flex-wrap gap-4 items-end">
             {/* Date Range Picker */}
             <div className="grid gap-2">
-                <Label>Zakres Dat</Label>
+                <Label>{dictionary.dateRangeLabel}</Label>
                 <Popover>
                     <PopoverTrigger asChild>
                         <Button
@@ -115,14 +138,14 @@ export default function Filters({
                              {dateRange?.from ? (
                                  dateRange.to ? (
                                      <>
-                                         {format(dateRange.from, "d MMM yyyy", { locale: pl })} -{" "}
-                                         {format(dateRange.to, "d MMM yyyy", { locale: pl })}
+                                         {format(dateRange.from, "d MMM yyyy", { locale: dateLocale })} -{" "}
+                                         {format(dateRange.to, "d MMM yyyy", { locale: dateLocale })}
                                      </>
                                  ) : (
-                                     format(dateRange.from, "d MMM yyyy", { locale: pl })
+                                     format(dateRange.from, "d MMM yyyy", { locale: dateLocale })
                                  )
                              ) : (
-                                 <span>Wybierz zakres dat</span>
+                                 <span>{dictionary.datePickerPlaceholder}</span>
                              )}
                          </Button>
                      </PopoverTrigger>
@@ -134,7 +157,7 @@ export default function Filters({
                              selected={dateRange}
                              onSelect={setDateRange}
                              numberOfMonths={2}
-                             locale={pl} // Add Polish locale
+                             locale={dateLocale} // Use dynamic locale
                          />
                      </PopoverContent>
                  </Popover>
@@ -142,14 +165,14 @@ export default function Filters({
 
             {/* User Filter */}
             <div className="grid gap-1.5 min-w-[180px]">
-                <Label htmlFor="user-select">Użytkownik</Label>
+                <Label htmlFor="user-select">{dictionary.userFilterLabel}</Label>
                 <Select
                     value={selectedUserId}
                     onValueChange={onUserChange}
                     disabled={isLoading || sortedMembers.length === 0}
                 >
                     <SelectTrigger id="user-select" className="w-full">
-                        <SelectValue placeholder="Wszyscy Użytkownicy" />
+                        <SelectValue placeholder={dictionary.userFilterPlaceholder} />
                     </SelectTrigger>
                     <SelectContent>
                         {/* Removed: <SelectItem value="">Wszyscy Użytkownicy</SelectItem> */}
@@ -164,20 +187,20 @@ export default function Filters({
 
             {/* Label Filter */}
             <div className="grid gap-1.5 min-w-[180px]">
-                <Label htmlFor="label-select">Etykieta</Label>
+                <Label htmlFor="label-select">{dictionary.labelFilterLabel}</Label>
                 <Select
                     value={selectedLabelId}
                     onValueChange={onLabelChange}
                     disabled={isLoading || sortedLabels.length === 0}
                 >
                     <SelectTrigger id="label-select" className="w-full">
-                        <SelectValue placeholder="Wszystkie Etykiety" />
+                        <SelectValue placeholder={dictionary.labelFilterPlaceholder} />
                     </SelectTrigger>
                     <SelectContent>
-                        {/* Removed: <SelectItem value="">Wszystkie Etykiety</SelectItem> */}
+                        {/* Add an explicit "All Labels" option? Or rely on placeholder */}
                         {sortedLabels.map((label) => (
                             <SelectItem key={label.id} value={label.id}>
-                                {label.name || `(Brak Nazwy - ${label.color})`}
+                                {label.name || `${dictionary.noNameLabel} - ${label.color}`}
                             </SelectItem>
                         ))}
                     </SelectContent>
@@ -190,15 +213,17 @@ export default function Filters({
                     onClick={onApplyFilters}
                     disabled={isLoading}
                 >
-                    {isLoading ? 'Ładowanie...' : 'Zastosuj Filtry'}
+                    {isLoading ? dictionary.loadingButton : dictionary.applyButton}
                 </Button>
 
-                {/* Export Button */}
+                {/* Export Button - TODO: Internationalize ExportButton component */}
                 {timeData.length > 0 && (
                     <ExportButton
                         timeData={timeData}
                         listMap={listMap}
                         memberMap={memberMap}
+                        // Pass the specific dictionary for ExportButton
+                        dictionary={exportButtonDictionary}
                     />
                 )}
             </div>

@@ -7,10 +7,76 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { ArrowRight, Clock, BarChart3, Users, CheckCircle, Calendar, PieChart, FileText, Star } from 'lucide-react';
 import { ThemeSwitcher } from '@/components/ThemeSwitcher';
+// Remove LanguageSwitcher import
 import PageTransition from '@/components/PageTransition';
 import ScrollAnimation from '@/components/ScrollAnimation';
 
-export default function LandingPageContent() {
+// Define and export the expected structure for the dictionary passed to this component
+// NOTE: This needs to be kept in sync with the actual dictionary files (en.json, pl.json)
+export interface LandingPageContentDictionary { // Added export keyword
+  title: string;
+  description: string;
+  signIn: string;
+  getStarted: string;
+  nav: {
+    features: string;
+    pricing: string;
+    faq: string;
+  };
+  hero: {
+    tagline: string;
+    title1: string;
+    title2: string;
+    buttonFree: string;
+    buttonLearn: string;
+    imageAlt: string;
+  };
+  features: {
+    title: string;
+    description: string;
+    card1: { title: string; description: string; item1: string; item2: string; item3: string; };
+    card2: { title: string; description: string; item1: string; item2: string; item3: string; };
+    card3: { title: string; description: string; item1: string; item2: string; item3: string; };
+    card4: { title: string; description: string; item1: string; item2: string; item3: string; };
+    card5: { title: string; description: string; item1: string; item2: string; item3: string; };
+    card6: { title: string; description: string; item1: string; item2: string; item3: string; };
+  };
+  pricing: {
+    title: string;
+    description: string;
+    free: { title: string; price: string; description: string; item1: string; item2: string; item3: string; item4: string; button: string; };
+    pro: { badge: string; title: string; price: string; description: string; item1: string; item2: string; item3: string; item4: string; item5: string; button: string; };
+    enterprise: { title: string; price: string; description: string; item1: string; item2: string; item3: string; item4: string; item5: string; button: string; };
+  };
+  faq: {
+    title: string;
+    description: string;
+    item1: { question: string; answer: string; };
+    item2: { question: string; answer: string; };
+    item3: { question: string; answer: string; };
+    item4: { question: string; answer: string; };
+    item5: { question: string; answer: string; };
+  };
+  footer: {
+    description: string; // Consider if this should be different from the main description
+    product: { title: string; features: string; pricing: string; faq: string; };
+    company: { title: string; about: string; blog: string; contact: string; };
+    support: { title: string; docs: string; help: string; status: string; };
+    copyright: string;
+    privacy: string;
+    terms: string;
+  };
+}
+
+// Define the props type for LandingPageContent using the specific dictionary type
+interface LandingPageContentProps {
+  dictionary: LandingPageContentDictionary;
+  // Remove lang: string;
+}
+
+export default function LandingPageContent({ dictionary }: LandingPageContentProps) { // Remove lang from props
+  // Now using the strongly-typed dictionary object
+
   return (
     <PageTransition>
       <div className="flex flex-col min-h-screen">
@@ -19,26 +85,29 @@ export default function LandingPageContent() {
           <div className="container mx-auto max-w-7xl flex h-16 items-center justify-between py-4">
             <div className="flex items-center gap-2">
               <Clock className="h-6 w-6 text-primary" />
-              <span className="text-xl font-bold">Trello Time Report</span>
+              {/* Assuming title is in the root of the passed dictionary */}
+              <span className="text-xl font-bold">{dictionary.title}</span>
             </div>
             <nav className="hidden md:flex items-center gap-6">
               <Link href="#features" className="text-sm font-medium hover:text-primary transition-colors hover:scale-105">
-                Funkcje
+                {dictionary.nav.features}
               </Link>
               <Link href="#pricing" className="text-sm font-medium hover:text-primary transition-colors hover:scale-105">
-                Cennik
+                {dictionary.nav.pricing}
               </Link>
               <Link href="#faq" className="text-sm font-medium hover:text-primary transition-colors hover:scale-105">
-                FAQ
+                {dictionary.nav.faq}
               </Link>
             </nav>
             <div className="flex items-center gap-4">
+              {/* Remove LanguageSwitcher usage */}
               <ThemeSwitcher />
-              <Link href="/sign-in">
-                <Button variant="ghost" className="hidden sm:inline-flex hover:scale-105 transition-transform duration-300">Zaloguj się</Button>
+              {/* Update links to remove lang */}
+              <Link href={`/sign-in`}>
+                <Button variant="ghost" className="hidden sm:inline-flex hover:scale-105 transition-transform duration-300">{dictionary.signIn}</Button>
               </Link>
-              <Link href="/sign-up">
-                <Button className="animate-pulse hover:animate-none hover:scale-105 transition-transform duration-300">Rozpocznij</Button>
+              <Link href={`/sign-up`}>
+                <Button className="animate-pulse hover:animate-none hover:scale-105 transition-transform duration-300">{dictionary.getStarted}</Button>
               </Link>
             </div>
           </div>
@@ -49,33 +118,34 @@ export default function LandingPageContent() {
           <section className="container mx-auto max-w-7xl py-24 space-y-8 md:py-32">
             <div className="flex flex-col items-center text-center space-y-4">
               <div className="rounded-full bg-primary/10 px-4 py-1.5 text-sm font-medium text-primary">
-                Zwiększ produktywność swojego zespołu
+                {dictionary.hero.tagline}
               </div>
               <h1 className="text-4xl font-bold tracking-tighter sm:text-5xl md:text-6xl">
-                Śledź czas zadań w Trello <br />
-                <span className="text-primary">Bez wysiłku</span>
+                {dictionary.hero.title1} <br />
+                <span className="text-primary">{dictionary.hero.title2}</span>
               </h1>
               <p className="max-w-[700px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-                Idealne rozszerzenie dla zespołów, które potrzebują monitorować czas spędzony na zadaniach i generować szczegółowe raporty bezpośrednio z Trello.
+                {/* Use the top-level description passed in */}
+                {dictionary.description}
               </p>
               <div className="flex flex-wrap items-center justify-center gap-4">
-                <Link href="/sign-up">
+                <Link href={`/sign-up`}>
                   <Button size="lg" className="gap-1.5 hover:scale-105 transition-transform duration-300">
-                    Zacznij za darmo
+                    {dictionary.hero.buttonFree}
                     <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform duration-300" />
                   </Button>
                 </Link>
                 <Link href="#features">
                   <Button size="lg" variant="outline" className="hover:scale-105 transition-transform duration-300">
-                    Dowiedz się więcej
+                    {dictionary.hero.buttonLearn}
                   </Button>
                 </Link>
               </div>
             </div>
             <div className="mx-auto max-w-5xl rounded-lg overflow-hidden shadow-xl">
               <Image
-                src="https://images.pexels.com/photos/6476260/pexels-photo-6476260.jpeg"
-                alt="Zespół pracujący z Trello Time Report"
+                src="https://images.pexels.com/photos/6476260/pexels-photo-6476260.jpeg" // Consider making image src/alt localizable if needed
+                alt={dictionary.hero.imageAlt}
                 width={1200}
                 height={600}
                 className="w-full object-cover rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300"
@@ -89,36 +159,35 @@ export default function LandingPageContent() {
         <ScrollAnimation delay={0.2}>
           <section id="features" className="container mx-auto max-w-7xl py-24 space-y-16 animate-in fade-in duration-1000">
             <div className="text-center space-y-4">
-              <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">Potężne funkcje</h2>
+              <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">{dictionary.features.title}</h2>
               <p className="max-w-[700px] mx-auto text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-                Wszystko, czego potrzebujesz do śledzenia czasu i generowania raportów dla swoich tablic Trello.
+                {dictionary.features.description}
               </p>
             </div>
 
-            {/* Feature Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {/* Feature Card 1 */}
               <Card className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
                 <CardHeader>
                   <BarChart3 className="h-10 w-10 text-primary mb-2 group-hover:scale-110 transition-transform duration-300" />
-                  <CardTitle>Szczegółowe Raporty</CardTitle>
+                  <CardTitle>{dictionary.features.card1.title}</CardTitle>
                   <CardDescription>
-                    Generuj kompleksowe raporty według tablicy, listy, członka zespołu lub okresu czasu. Eksportuj dane w wielu formatach.
+                    {dictionary.features.card1.description}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <ul className="space-y-2">
                     <li className="flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-primary" />
-                      <span className="text-sm">Niestandardowe zakresy dat</span>
+                      <span className="text-sm">{dictionary.features.card1.item1}</span>
                     </li>
                     <li className="flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-primary" />
-                      <span className="text-sm">Eksport do CSV/PDF</span>
+                      <span className="text-sm">{dictionary.features.card1.item2}</span>
                     </li>
                     <li className="flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-primary" />
-                      <span className="text-sm">Filtrowanie według członka zespołu</span>
+                      <span className="text-sm">{dictionary.features.card1.item3}</span>
                     </li>
                   </ul>
                 </CardContent>
@@ -128,24 +197,24 @@ export default function LandingPageContent() {
               <Card className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
                 <CardHeader>
                   <Users className="h-10 w-10 text-primary mb-2 group-hover:scale-110 transition-transform duration-300" />
-                  <CardTitle>Analityka Zespołowa</CardTitle>
+                  <CardTitle>{dictionary.features.card2.title}</CardTitle>
                   <CardDescription>
-                    Wizualizuj produktywność swojego zespołu i identyfikuj wąskie gardła dzięki interaktywnym dashboardom.
+                    {dictionary.features.card2.description}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <ul className="space-y-2">
                     <li className="flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-primary" />
-                      <span className="text-sm">Trendy produktywności</span>
+                      <span className="text-sm">{dictionary.features.card2.item1}</span>
                     </li>
                     <li className="flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-primary" />
-                      <span className="text-sm">Rozkład obciążenia pracą</span>
+                      <span className="text-sm">{dictionary.features.card2.item2}</span>
                     </li>
                     <li className="flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-primary" />
-                      <span className="text-sm">Wgląd w alokację czasu</span>
+                      <span className="text-sm">{dictionary.features.card2.item3}</span>
                     </li>
                   </ul>
                 </CardContent>
@@ -155,24 +224,24 @@ export default function LandingPageContent() {
               <Card className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
                 <CardHeader>
                   <Calendar className="h-10 w-10 text-primary mb-2 group-hover:scale-110 transition-transform duration-300" />
-                  <CardTitle>Śledzenie Czasu</CardTitle>
+                  <CardTitle>{dictionary.features.card3.title}</CardTitle>
                   <CardDescription>
-                    Łatwe rejestrowanie czasu spędzonego na zadaniach bezpośrednio z kart Trello. Automatyczne sumowanie i analiza.
+                    {dictionary.features.card3.description}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <ul className="space-y-2">
                     <li className="flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-primary" />
-                      <span className="text-sm">Intuicyjny interfejs</span>
+                      <span className="text-sm">{dictionary.features.card3.item1}</span>
                     </li>
                     <li className="flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-primary" />
-                      <span className="text-sm">Śledzenie w czasie rzeczywistym</span>
+                      <span className="text-sm">{dictionary.features.card3.item2}</span>
                     </li>
                     <li className="flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-primary" />
-                      <span className="text-sm">Komentarze do wpisów czasowych</span>
+                      <span className="text-sm">{dictionary.features.card3.item3}</span>
                     </li>
                   </ul>
                 </CardContent>
@@ -185,24 +254,24 @@ export default function LandingPageContent() {
               <Card className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
                 <CardHeader>
                   <PieChart className="h-10 w-10 text-primary mb-2 group-hover:scale-110 transition-transform duration-300" />
-                  <CardTitle>Wizualizacja Danych</CardTitle>
+                  <CardTitle>{dictionary.features.card4.title}</CardTitle>
                   <CardDescription>
-                    Przekształć dane czasowe w przejrzyste wykresy i diagramy, które pomagają w podejmowaniu decyzji.
+                    {dictionary.features.card4.description}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <ul className="space-y-2">
                     <li className="flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-primary" />
-                      <span className="text-sm">Wykresy kołowe i słupkowe</span>
+                      <span className="text-sm">{dictionary.features.card4.item1}</span>
                     </li>
                     <li className="flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-primary" />
-                      <span className="text-sm">Wykresy trendów czasowych</span>
+                      <span className="text-sm">{dictionary.features.card4.item2}</span>
                     </li>
                     <li className="flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-primary" />
-                      <span className="text-sm">Eksport wizualizacji</span>
+                      <span className="text-sm">{dictionary.features.card4.item3}</span>
                     </li>
                   </ul>
                 </CardContent>
@@ -212,24 +281,24 @@ export default function LandingPageContent() {
               <Card className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
                 <CardHeader>
                   <FileText className="h-10 w-10 text-primary mb-2 group-hover:scale-110 transition-transform duration-300" />
-                  <CardTitle>Rozliczanie Projektów</CardTitle>
+                  <CardTitle>{dictionary.features.card5.title}</CardTitle>
                   <CardDescription>
-                    Automatycznie generuj raporty rozliczeniowe na podstawie zarejestrowanego czasu pracy.
+                    {dictionary.features.card5.description}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <ul className="space-y-2">
                     <li className="flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-primary" />
-                      <span className="text-sm">Raporty fakturowania</span>
+                      <span className="text-sm">{dictionary.features.card5.item1}</span>
                     </li>
                     <li className="flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-primary" />
-                      <span className="text-sm">Stawki godzinowe</span>
+                      <span className="text-sm">{dictionary.features.card5.item2}</span>
                     </li>
                     <li className="flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-primary" />
-                      <span className="text-sm">Eksport do systemów księgowych</span>
+                      <span className="text-sm">{dictionary.features.card5.item3}</span>
                     </li>
                   </ul>
                 </CardContent>
@@ -239,24 +308,24 @@ export default function LandingPageContent() {
               <Card className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
                 <CardHeader>
                   <Star className="h-10 w-10 text-primary mb-2 group-hover:scale-110 transition-transform duration-300" />
-                  <CardTitle>Integracja z Trello</CardTitle>
+                  <CardTitle>{dictionary.features.card6.title}</CardTitle>
                   <CardDescription>
-                    Bezproblemowa integracja z Trello bez zakłócania istniejącego przepływu pracy.
+                    {dictionary.features.card6.description}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <ul className="space-y-2">
                     <li className="flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-primary" />
-                      <span className="text-sm">Natywna integracja</span>
+                      <span className="text-sm">{dictionary.features.card6.item1}</span>
                     </li>
                     <li className="flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-primary" />
-                      <span className="text-sm">Synchronizacja w czasie rzeczywistym</span>
+                      <span className="text-sm">{dictionary.features.card6.item2}</span>
                     </li>
                     <li className="flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-primary" />
-                      <span className="text-sm">Brak dodatkowych konfiguracji</span>
+                      <span className="text-sm">{dictionary.features.card6.item3}</span>
                     </li>
                   </ul>
                 </CardContent>
@@ -269,9 +338,9 @@ export default function LandingPageContent() {
         <ScrollAnimation delay={0.4}>
           <section id="pricing" className="container mx-auto max-w-7xl py-24 space-y-12 bg-muted/30 rounded-xl">
             <div className="text-center space-y-4">
-              <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">Przejrzyste ceny</h2>
+              <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">{dictionary.pricing.title}</h2>
               <p className="max-w-[700px] mx-auto text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-                Wybierz plan, który najlepiej odpowiada potrzebom Twojego zespołu.
+                {dictionary.pricing.description}
               </p>
             </div>
 
@@ -279,68 +348,68 @@ export default function LandingPageContent() {
               {/* Free Plan */}
               <Card className="relative overflow-hidden border-border/40 group hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
                 <CardHeader>
-                  <CardTitle>Darmowy</CardTitle>
-                  <div className="text-3xl font-bold">0 zł</div>
-                  <CardDescription>Idealny do rozpoczęcia pracy</CardDescription>
+                  <CardTitle>{dictionary.pricing.free.title}</CardTitle>
+                  <div className="text-3xl font-bold">{dictionary.pricing.free.price}</div>
+                  <CardDescription>{dictionary.pricing.free.description}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <ul className="space-y-2">
                     <li className="flex items-start gap-2">
                       <CheckCircle className="h-4 w-4 text-primary mt-1" />
-                      <span className="text-sm">Do 3 tablic Trello</span>
+                      <span className="text-sm">{dictionary.pricing.free.item1}</span>
                     </li>
                     <li className="flex items-start gap-2">
                       <CheckCircle className="h-4 w-4 text-primary mt-1" />
-                      <span className="text-sm">Podstawowe raporty</span>
+                      <span className="text-sm">{dictionary.pricing.free.item2}</span>
                     </li>
                     <li className="flex items-start gap-2">
                       <CheckCircle className="h-4 w-4 text-primary mt-1" />
-                      <span className="text-sm">Eksport do CSV</span>
+                      <span className="text-sm">{dictionary.pricing.free.item3}</span>
                     </li>
                     <li className="flex items-start gap-2">
                       <CheckCircle className="h-4 w-4 text-primary mt-1" />
-                      <span className="text-sm">1 użytkownik</span>
+                      <span className="text-sm">{dictionary.pricing.free.item4}</span>
                     </li>
                   </ul>
-                  <Link href="/sign-up">
-                    <Button className="w-full group-hover:bg-primary/90 transition-colors">Rozpocznij za darmo</Button>
+                  <Link href={`/sign-up`}>
+                    <Button className="w-full group-hover:bg-primary/90 transition-colors">{dictionary.pricing.free.button}</Button>
                   </Link>
                 </CardContent>
               </Card>
 
               {/* Pro Plan */}
               <Card className="relative overflow-hidden border-primary group hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
-                <div className="absolute top-0 right-0 bg-primary text-primary-foreground px-3 py-1 text-xs font-medium">Popularny</div>
+                <div className="absolute top-0 right-0 bg-primary text-primary-foreground px-3 py-1 text-xs font-medium">{dictionary.pricing.pro.badge}</div>
                 <CardHeader>
-                  <CardTitle>Pro</CardTitle>
-                  <div className="text-3xl font-bold">49 zł</div>
-                  <CardDescription>miesięcznie za użytkownika</CardDescription>
+                  <CardTitle>{dictionary.pricing.pro.title}</CardTitle>
+                  <div className="text-3xl font-bold">{dictionary.pricing.pro.price}</div>
+                  <CardDescription>{dictionary.pricing.pro.description}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <ul className="space-y-2">
                     <li className="flex items-start gap-2">
                       <CheckCircle className="h-4 w-4 text-primary mt-1" />
-                      <span className="text-sm">Nieograniczona liczba tablic</span>
+                      <span className="text-sm">{dictionary.pricing.pro.item1}</span>
                     </li>
                     <li className="flex items-start gap-2">
                       <CheckCircle className="h-4 w-4 text-primary mt-1" />
-                      <span className="text-sm">Zaawansowane raporty i wykresy</span>
+                      <span className="text-sm">{dictionary.pricing.pro.item2}</span>
                     </li>
                     <li className="flex items-start gap-2">
                       <CheckCircle className="h-4 w-4 text-primary mt-1" />
-                      <span className="text-sm">Eksport do CSV, PDF, Excel</span>
+                      <span className="text-sm">{dictionary.pricing.pro.item3}</span>
                     </li>
                     <li className="flex items-start gap-2">
                       <CheckCircle className="h-4 w-4 text-primary mt-1" />
-                      <span className="text-sm">Analityka zespołowa</span>
+                      <span className="text-sm">{dictionary.pricing.pro.item4}</span>
                     </li>
                     <li className="flex items-start gap-2">
                       <CheckCircle className="h-4 w-4 text-primary mt-1" />
-                      <span className="text-sm">Priorytetowe wsparcie</span>
+                      <span className="text-sm">{dictionary.pricing.pro.item5}</span>
                     </li>
                   </ul>
-                  <Link href="/sign-up?plan=pro">
-                    <Button className="w-full group-hover:bg-primary/90 transition-colors">Wybierz plan Pro</Button>
+                  <Link href={`/sign-up?plan=pro`}>
+                    <Button className="w-full group-hover:bg-primary/90 transition-colors">{dictionary.pricing.pro.button}</Button>
                   </Link>
                 </CardContent>
               </Card>
@@ -348,35 +417,35 @@ export default function LandingPageContent() {
               {/* Enterprise Plan */}
               <Card className="relative overflow-hidden border-border/40 group hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
                 <CardHeader>
-                  <CardTitle>Enterprise</CardTitle>
-                  <div className="text-3xl font-bold">Kontakt</div>
-                  <CardDescription>Rozwiązanie dla dużych zespołów</CardDescription>
+                  <CardTitle>{dictionary.pricing.enterprise.title}</CardTitle>
+                  <div className="text-3xl font-bold">{dictionary.pricing.enterprise.price}</div>
+                  <CardDescription>{dictionary.pricing.enterprise.description}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <ul className="space-y-2">
                     <li className="flex items-start gap-2">
                       <CheckCircle className="h-4 w-4 text-primary mt-1" />
-                      <span className="text-sm">Wszystko z planu Pro</span>
+                      <span className="text-sm">{dictionary.pricing.enterprise.item1}</span>
                     </li>
                     <li className="flex items-start gap-2">
                       <CheckCircle className="h-4 w-4 text-primary mt-1" />
-                      <span className="text-sm">Dedykowane wsparcie</span>
+                      <span className="text-sm">{dictionary.pricing.enterprise.item2}</span>
                     </li>
                     <li className="flex items-start gap-2">
                       <CheckCircle className="h-4 w-4 text-primary mt-1" />
-                      <span className="text-sm">Niestandardowe integracje</span>
+                      <span className="text-sm">{dictionary.pricing.enterprise.item3}</span>
                     </li>
                     <li className="flex items-start gap-2">
                       <CheckCircle className="h-4 w-4 text-primary mt-1" />
-                      <span className="text-sm">Zaawansowane zabezpieczenia</span>
+                      <span className="text-sm">{dictionary.pricing.enterprise.item4}</span>
                     </li>
                     <li className="flex items-start gap-2">
                       <CheckCircle className="h-4 w-4 text-primary mt-1" />
-                      <span className="text-sm">SLA i wsparcie 24/7</span>
+                      <span className="text-sm">{dictionary.pricing.enterprise.item5}</span>
                     </li>
                   </ul>
-                  <Link href="/contact">
-                    <Button variant="outline" className="w-full group-hover:bg-muted transition-colors">Skontaktuj się z nami</Button>
+                  <Link href={`/contact`}>
+                    <Button variant="outline" className="w-full group-hover:bg-muted transition-colors">{dictionary.pricing.enterprise.button}</Button>
                   </Link>
                 </CardContent>
               </Card>
@@ -388,41 +457,41 @@ export default function LandingPageContent() {
         <ScrollAnimation delay={0.3}>
           <section id="faq" className="container mx-auto max-w-7xl py-24 space-y-12">
             <div className="text-center space-y-4">
-              <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">Często zadawane pytania</h2>
+              <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">{dictionary.faq.title}</h2>
               <p className="max-w-[700px] mx-auto text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-                Odpowiedzi na najczęściej zadawane pytania dotyczące Trello Time Report.
+                {dictionary.faq.description}
               </p>
             </div>
 
             <Accordion type="single" collapsible className="w-full max-w-3xl mx-auto">
               <AccordionItem value="item-1">
-                <AccordionTrigger className="text-left">Jak zacząć korzystać z Trello Time Report?</AccordionTrigger>
+                <AccordionTrigger className="text-left">{dictionary.faq.item1.question}</AccordionTrigger>
                 <AccordionContent>
-                  Aby rozpocząć, zarejestruj się za darmo, połącz swoje konto Trello i wybierz tablice, które chcesz monitorować. Nasz intuicyjny interfejs przeprowadzi Cię przez proces konfiguracji w kilka minut.
+                  {dictionary.faq.item1.answer}
                 </AccordionContent>
               </AccordionItem>
               <AccordionItem value="item-2">
-                <AccordionTrigger className="text-left">Czy mogę eksportować dane do innych formatów?</AccordionTrigger>
+                <AccordionTrigger className="text-left">{dictionary.faq.item2.question}</AccordionTrigger>
                 <AccordionContent>
-                  Tak, Trello Time Report umożliwia eksport danych do formatów CSV, PDF i Excel. Możesz również zintegrować nasze API z innymi narzędziami do analizy danych.
+                  {dictionary.faq.item2.answer}
                 </AccordionContent>
               </AccordionItem>
               <AccordionItem value="item-3">
-                <AccordionTrigger className="text-left">Czy aplikacja działa na urządzeniach mobilnych?</AccordionTrigger>
+                <AccordionTrigger className="text-left">{dictionary.faq.item3.question}</AccordionTrigger>
                 <AccordionContent>
-                  Tak, nasza aplikacja jest w pełni responsywna i działa na wszystkich urządzeniach mobilnych. Możesz śledzić czas i przeglądać raporty z dowolnego miejsca.
+                  {dictionary.faq.item3.answer}
                 </AccordionContent>
               </AccordionItem>
               <AccordionItem value="item-4">
-                <AccordionTrigger className="text-left">Czy mogę śledzić czas dla wielu tablic Trello?</AccordionTrigger>
+                <AccordionTrigger className="text-left">{dictionary.faq.item4.question}</AccordionTrigger>
                 <AccordionContent>
-                  Oczywiście! Możesz śledzić czas dla nieograniczonej liczby tablic Trello. Nasze narzędzie pozwala na łatwe przełączanie się między tablicami i generowanie raportów zbiorczych.
+                  {dictionary.faq.item4.answer}
                 </AccordionContent>
               </AccordionItem>
               <AccordionItem value="item-5">
-                <AccordionTrigger className="text-left">Jak działa rozliczanie i jakie są plany cenowe?</AccordionTrigger>
+                <AccordionTrigger className="text-left">{dictionary.faq.item5.question}</AccordionTrigger>
                 <AccordionContent>
-                  Oferujemy darmowy plan startowy oraz plany premium z dodatkowymi funkcjami. Rozliczanie odbywa się miesięcznie lub rocznie, z rabatem przy płatności rocznej. Szczegółowe informacje znajdziesz w sekcji Cennik.
+                  {dictionary.faq.item5.answer}
                 </AccordionContent>
               </AccordionItem>
             </Accordion>
@@ -436,68 +505,68 @@ export default function LandingPageContent() {
               <div className="space-y-4">
                 <div className="flex items-center gap-2">
                   <Clock className="h-6 w-6 text-primary" />
-                  <span className="text-xl font-bold">Trello Time Report</span>
+                  <span className="text-xl font-bold">{dictionary.title}</span>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  Monitoruj czas spędzony na zadaniach w Trello i generuj szczegółowe raporty.
+                  {dictionary.footer.description}
                 </p>
               </div>
               <div>
-                <h3 className="font-medium mb-4">Produkt</h3>
+                <h3 className="font-medium mb-4">{dictionary.footer.product.title}</h3>
                 <ul className="space-y-2">
                   <li>
                     <Link href="#features" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                      Funkcje
+                      {dictionary.footer.product.features}
                     </Link>
                   </li>
                   <li>
                     <Link href="#pricing" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                      Cennik
+                      {dictionary.footer.product.pricing}
                     </Link>
                   </li>
                   <li>
                     <Link href="#faq" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                      FAQ
+                      {dictionary.footer.product.faq}
                     </Link>
                   </li>
                 </ul>
               </div>
               <div>
-                <h3 className="font-medium mb-4">Firma</h3>
+                <h3 className="font-medium mb-4">{dictionary.footer.company.title}</h3>
                 <ul className="space-y-2">
                   <li>
-                    <Link href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                      O nas
+                    <Link href={`/about`} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                      {dictionary.footer.company.about}
                     </Link>
                   </li>
                   <li>
-                    <Link href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                      Blog
+                    <Link href={`/blog`} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                      {dictionary.footer.company.blog}
                     </Link>
                   </li>
                   <li>
-                    <Link href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                      Kontakt
+                    <Link href={`/contact`} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                      {dictionary.footer.company.contact}
                     </Link>
                   </li>
                 </ul>
               </div>
               <div>
-                <h3 className="font-medium mb-4">Wsparcie</h3>
+                <h3 className="font-medium mb-4">{dictionary.footer.support.title}</h3>
                 <ul className="space-y-2">
                   <li>
-                    <Link href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                      Dokumentacja
+                    <Link href={`/docs`} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                      {dictionary.footer.support.docs}
                     </Link>
                   </li>
                   <li>
-                    <Link href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                      Centrum pomocy
+                    <Link href={`/help`} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                      {dictionary.footer.support.help}
                     </Link>
                   </li>
                   <li>
-                    <Link href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                      Status
+                    <Link href={`/status`} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                      {dictionary.footer.support.status}
                     </Link>
                   </li>
                 </ul>
@@ -505,14 +574,14 @@ export default function LandingPageContent() {
             </div>
             <div className="border-t pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
               <p className="text-sm text-muted-foreground">
-                © {new Date().getFullYear()} Trello Time Report. All rights reserved.
+                © {new Date().getFullYear()} {dictionary.title}. {dictionary.footer.copyright}
               </p>
               <div className="flex items-center gap-4">
-                <Link href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                  Privacy Policy
+                <Link href={`/privacy`} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                  {dictionary.footer.privacy}
                 </Link>
-                <Link href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                  Terms of Service
+                <Link href={`/terms`} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                  {dictionary.footer.terms}
                 </Link>
               </div>
             </div>

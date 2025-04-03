@@ -1,11 +1,11 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import { ThemeProvider } from "next-themes";
-import { ClerkProvider } from "@clerk/nextjs";
-import { Toaster } from "@/components/ui/sonner";
+import type { Metadata } from 'next';
+import { Geist, Geist_Mono } from 'next/font/google';
+import { ThemeProvider } from 'next-themes';
+import { ClerkProvider } from '@clerk/nextjs';
+import { Toaster } from '@/components/ui/sonner';
 
-import "./globals.css";
-import { plPL } from '@clerk/localizations'
+import './globals.css';
+import { plPL } from '@clerk/localizations'; // Import only Polish localization
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -33,18 +33,24 @@ export const metadata: Metadata = {
   },
 };
 
+// Remove generateStaticParams as it's no longer needed for single language
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
+  // Remove params: { lang: string };
 }>) {
+  // Set Clerk localization to Polish
+  const clerkLocale = plPL;
+
   return (
     <ClerkProvider
-      localization={plPL}
-      afterSignOutUrl="/?logged_out=true"
+      localization={clerkLocale} // Use Polish locale
+      afterSignOutUrl={`/?logged_out=true`} // Adjust sign out URL to root
     >
-      <html lang="pl" className="scroll-smooth" suppressHydrationWarning>
-        <head />
+      <html lang="pl" className="scroll-smooth" suppressHydrationWarning>{/* Set lang to pl */}
+        <head />{/* Ensure no whitespace before head */}
         <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >

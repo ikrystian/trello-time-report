@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useMemo, useState } from 'react'; // Added useState
-import Image from 'next/image'; // Import Next.js Image component
-import { formatDatePL } from '@/lib/date-utils'; // Use date-fns for date formatting
-import { Button } from "@/components/ui/button"; // Import Button
+import React, { useMemo, useState } from 'react';
+import Image from 'next/image';
+import { format } from "date-fns"; // Import format directly
+import { pl } from 'date-fns/locale'; // Import only Polish locale
+import { Button } from "@/components/ui/button";
 import {
     Tooltip,
     TooltipContent,
@@ -35,10 +36,34 @@ import {
 // Import types from types file
 import { ProcessedCardData } from '@/types/time-report';
 
+// Define dictionary structure for TimeReport and its sub-components
+export interface TimeReportDictionary {
+    noData: string;
+    invalidDate: string;
+    unknownList: string;
+    noTimeEntries: string;
+    summaryTitle: string;
+    plannedHours: string;
+    reportedHours: string;
+    taskCount: string;
+    hoursByLabelTitle: string;
+    expandAll: string;
+    collapseAll: string;
+    userHeader: string;
+    dateHeader: string;
+    hoursHeader: string;
+    commentHeader: string;
+    openInTrello: string;
+    estimated: string; // Short for Estimated
+    reported: string; // Short for Reported
+}
+
 interface TimeReportProps {
     timeData: ProcessedCardData[];
     listMap: Record<string, string>;
     memberMap: Record<string, { fullName: string; avatarUrl: string | null }>;
+    dictionary: TimeReportDictionary; // Add dictionary prop
+    // Remove lang: string;
 }
 
 // Helper function to format hours with 2 decimal places
@@ -47,14 +72,16 @@ function formatHours(hours: number | null | undefined): string {
     return num.toFixed(2);
 }
 
-// Helper function to format date string
-function formatDate(dateString: string | undefined): string {
-    if (!dateString) return 'B/D'; // Brak Danych
+// Helper function to format date string (now uses hardcoded Polish locale)
+function formatDate(dateString: string | undefined, dictionary: TimeReportDictionary): string { // Remove lang parameter
+    if (!dateString) return dictionary.noData || 'N/A';
     try {
-        return formatDatePL(new Date(dateString));
+        const dateLocale = pl; // Use Polish locale directly
+        // Use format with Polish locale
+        return format(new Date(dateString), "d MMM yyyy", { locale: dateLocale });
     } catch (e) {
         console.error("Error formatting date:", dateString, e);
-        return 'Błędna data';
+        return dictionary.invalidDate || 'Invalid Date';
     }
 }
 
@@ -82,13 +109,14 @@ function getTrelloLabelColor(color: string | undefined): string {
 // --- Sub-components for better structure ---
 
 interface CardGroupProps {
-    card: ProcessedCardData & { totalReportedHours: number }; // Add calculated total
+    card: ProcessedCardData & { totalReportedHours: number };
     memberMap: Record<string, { fullName: string; avatarUrl: string | null }>;
-    // defaultOpen prop is no longer needed for Accordion
+    dictionary: TimeReportDictionary;
+    // Remove lang: string;
 }
 
 // Note: CardGroup now returns an AccordionItem, intended to be used within an Accordion
-function CardGroup({ card, memberMap }: CardGroupProps) {
+function CardGroup({ card, memberMap, dictionary }: CardGroupProps) { // Remove lang
     const sortedEntries = useMemo(() =>
         [...card.timeEntries].sort((a, b) => (b.date && a.date) ? new Date(b.date).getTime() - new Date(a.date).getTime() : 0)
     , [card.timeEntries]);
@@ -113,18 +141,19 @@ function CardGroup({ card, memberMap }: CardGroupProps) {
                         {card.cardName}
                     </span>
                 </div>
-                <span className="text-xs font-normal text-muted-foreground whitespace-nowrap pr-2"> {/* Added padding right */}
-                    (Szac: {formatHours(card.estimatedHours)}h / Rap: {formatHours(card.totalReportedHours)}h)
+                {/* Use dictionary for labels */}
+                <span className="text-xs font-normal text-muted-foreground whitespace-nowrap pr-2">
+                    ({dictionary.estimated}: {formatHours(card.estimatedHours)}h / {dictionary.reported}: {formatHours(card.totalReportedHours)}h)
                 </span>
                 <a
                     href={card.cardUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="ml-2 opacity-70 hover:opacity-100 transition-all duration-200 hover:text-primary hover:scale-110"
-                    title="Otwórz kartę w Trello"
-                    onClick={(e) => e.stopPropagation()} // Prevent closing details on link click
+                    title={dictionary.openInTrello} // Use dictionary
+                    onClick={(e) => e.stopPropagation()}
                 >
-                    🔗
+                    🔗 {/* Keep icon or replace with localized text/icon */}
                 </a>
             </AccordionTrigger>
             <AccordionContent className="border-t pt-0"> {/* Remove default padding-top */}
@@ -133,16 +162,16 @@ function CardGroup({ card, memberMap }: CardGroupProps) {
                     <Table className="text-sm">
                         <TableHeader>
                             <TableRow>
-                                <TableHead className="w-[150px]">Użytkownik</TableHead>
-                                <TableHead className="w-[100px]">Data</TableHead>
-                                <TableHead className="w-[80px] text-right">Godziny</TableHead>
-                                <TableHead>Komentarz</TableHead>
+                                <TableHead className="w-[150px]">{dictionary.userHeader}</TableHead>
+                                <TableHead className="w-[100px]">{dictionary.dateHeader}</TableHead>
+                                <TableHead className="w-[80px] text-right">{dictionary.hoursHeader}</TableHead>
+                                <TableHead>{dictionary.commentHeader}</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {sortedEntries.map((entry, index) => {
-                                const userName = entry.memberId ? memberMap[entry.memberId]?.fullName || entry.memberId : 'B/D';
-                                const dateStr = formatDate(entry.date);
+                                const userName = entry.memberId ? memberMap[entry.memberId]?.fullName || entry.memberId : dictionary.noData || 'N/A';
+                                const dateStr = formatDate(entry.date, dictionary); // Pass only dictionary
                                 const hoursStr = formatHours(entry.hours);
                                 return (
                                     <TableRow key={`${entry.date}-${entry.memberId}-${index}`}>
@@ -181,7 +210,7 @@ function CardGroup({ card, memberMap }: CardGroupProps) {
                         </TableBody>
                     </Table>
                 ) : (
-                    <p className="px-3 py-2 text-xs text-muted-foreground italic">Brak wpisów czasu.</p>
+                    <p className="px-3 py-2 text-xs text-muted-foreground italic">{dictionary.noTimeEntries}</p>
                 )}
             </AccordionContent>
         </AccordionItem>
@@ -196,36 +225,37 @@ interface ReportSummaryProps {
     totalLoggedHours: number;
     totalTasks: number;
     hoursByLabel: Record<string, { name: string; color: string; hours: number }>;
+    dictionary: TimeReportDictionary; // Pass dictionary
 }
 
-function ReportSummary({ totalPlannedHours, totalLoggedHours, totalTasks, hoursByLabel }: ReportSummaryProps) {
+function ReportSummary({ totalPlannedHours, totalLoggedHours, totalTasks, hoursByLabel, dictionary }: ReportSummaryProps) {
     return (
         <Card className="mb-6">
             <CardHeader className="pb-3">
-                <CardTitle>Podsumowanie raportu</CardTitle>
+                <CardTitle>{dictionary.summaryTitle}</CardTitle>
             </CardHeader>
             <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                     <div className="p-4 rounded-lg border bg-card">
-                        <h3 className="text-sm font-medium text-muted-foreground mb-1">Zaplanowane godziny</h3>
+                        <h3 className="text-sm font-medium text-muted-foreground mb-1">{dictionary.plannedHours}</h3>
                         <p className="text-2xl font-bold">{formatHours(totalPlannedHours)}h</p>
                     </div>
                     <div className="p-4 rounded-lg border bg-card">
-                        <h3 className="text-sm font-medium text-muted-foreground mb-1">Zaraportowane godziny</h3>
+                        <h3 className="text-sm font-medium text-muted-foreground mb-1">{dictionary.reportedHours}</h3>
                         <p className="text-2xl font-bold">{formatHours(totalLoggedHours)}h</p>
                     </div>
                     <div className="p-4 rounded-lg border bg-card">
-                        <h3 className="text-sm font-medium text-muted-foreground mb-1">Liczba zadań</h3>
+                        <h3 className="text-sm font-medium text-muted-foreground mb-1">{dictionary.taskCount}</h3>
                         <p className="text-2xl font-bold">{totalTasks}</p>
                     </div>
                 </div>
 
                 {Object.keys(hoursByLabel).length > 0 && (
                     <div>
-                        <h3 className="text-sm font-medium mb-2">Godziny według etykiet</h3>
+                        <h3 className="text-sm font-medium mb-2">{dictionary.hoursByLabelTitle}</h3>
                         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
                             {Object.entries(hoursByLabel)
-                                .sort(([, a], [, b]) => b.hours - a.hours)
+                                .sort(([, a], [, b]) => b.hours - a.hours) // Keep sorting logic
                                 .map(([labelId, label]) => (
                                     <div key={labelId} className="flex items-center gap-2 p-2 rounded-md border">
                                         <div
@@ -249,7 +279,7 @@ function ReportSummary({ totalPlannedHours, totalLoggedHours, totalTasks, hoursB
 
 // --- Main TimeReport Component ---
 
-export default function TimeReport({ timeData, listMap, memberMap }: TimeReportProps) {
+export default function TimeReport({ timeData, listMap, memberMap, dictionary }: TimeReportProps) { // Remove lang
     // Calculate summary data
     const summaryData = useMemo(() => {
         let totalPlannedHours = 0;
@@ -317,7 +347,7 @@ export default function TimeReport({ timeData, listMap, memberMap }: TimeReportP
             const listId = card.listId || 'unknown-list';
             if (!acc[listId]) {
                 acc[listId] = {
-                    listName: listMap[listId] || 'Nieznana Lista',
+                    listName: listMap[listId] || dictionary.unknownList || 'Unknown List', // Use dictionary
                     cards: [],
                     totalReportedHours: 0,
                     totalEstimatedHours: 0,
@@ -348,10 +378,10 @@ export default function TimeReport({ timeData, listMap, memberMap }: TimeReportP
                 // Sort cards within each list
                 cards: listGroup.cards.sort((a, b) => a.cardName.localeCompare(b.cardName))
             }));
-    }, [timeData, listMap]);
+    }, [timeData, listMap, dictionary]); // Add dictionary dependency
 
     // Calculate all possible list names and card IDs for expand/collapse all
-    const allListNames = useMemo(() => groupedAndSortedData.map((lg: { listName: string }) => lg.listName), [groupedAndSortedData]);
+    const allListNames = useMemo(() => groupedAndSortedData.map(lg => lg.listName), [groupedAndSortedData]);
     const allCardIds = useMemo(() => {
         return groupedAndSortedData.flatMap((listGroup: { cards: { cardId: string }[] }) =>
             listGroup.cards.map(card => card.cardId)
@@ -370,22 +400,20 @@ export default function TimeReport({ timeData, listMap, memberMap }: TimeReportP
     React.useEffect(() => {
         setOpenListIds(allListNames); // Keep lists expanded by default
         setOpenCardIds([]); // Keep cards collapsed by default
-    }, [allListNames, allCardIds]); // Depend on the calculated lists/cards
+    }, [allListNames, allCardIds]);
 
     const toggleAll = () => {
         if (isAllExpanded) {
-            // Collapse all
             setOpenListIds([]);
             setOpenCardIds([]);
         } else {
-            // Expand all
             setOpenListIds(allListNames);
             setOpenCardIds(allCardIds);
         }
     };
 
     if (groupedAndSortedData.length === 0) {
-        return <p className="text-center text-muted-foreground py-4">Nie znaleziono wpisów czasu dla wybranych filtrów.</p>;
+        return <p className="text-center text-muted-foreground py-4">{dictionary.noData}</p>; // Use dictionary
     }
 
     return (
@@ -396,11 +424,12 @@ export default function TimeReport({ timeData, listMap, memberMap }: TimeReportP
                 totalLoggedHours={summaryData.totalLoggedHours}
                 totalTasks={summaryData.totalTasks}
                 hoursByLabel={summaryData.hoursByLabel}
+                dictionary={dictionary} // Pass dictionary
             />
 
             <div className="mb-4 flex justify-end items-center">
                 <Button variant="outline" size="sm" onClick={toggleAll}>
-                    {isAllExpanded ? 'Zwiń wszystko' : 'Rozwiń wszystko'}
+                    {isAllExpanded ? dictionary.collapseAll : dictionary.expandAll} {/* Use dictionary */}
                 </Button>
             </div>
             {/* Outer Accordion now controlled by state */}
@@ -413,10 +442,10 @@ export default function TimeReport({ timeData, listMap, memberMap }: TimeReportP
                 {groupedAndSortedData.map((listGroup) => (
                     <AccordionItem key={listGroup.listName} value={listGroup.listName} className="border rounded bg-muted/30">
                     <AccordionTrigger className="p-3 text-base font-bold hover:no-underline rounded-t">
-                        {/* Removed manual triangle span */}
                         <span className="flex-grow mr-2 text-left">{listGroup.listName}</span>
+                        {/* Use dictionary for labels */}
                         <span className="text-sm font-normal text-muted-foreground whitespace-nowrap pr-2">
-                            (Szac: {formatHours(listGroup.totalEstimatedHours)}h / Rep: {formatHours(listGroup.totalReportedHours)}h)
+                            ({dictionary.estimated}: {formatHours(listGroup.totalEstimatedHours)}h / {dictionary.reported}: {formatHours(listGroup.totalReportedHours)}h)
                         </span>
                     </AccordionTrigger>
                     <AccordionContent className="p-2 pl-4 border-t border-b">
@@ -428,7 +457,7 @@ export default function TimeReport({ timeData, listMap, memberMap }: TimeReportP
                             className="w-full space-y-2"
                         >
                              {listGroup.cards.map((card) => (
-                                <CardGroup key={card.cardId} card={card} memberMap={memberMap} />
+                                <CardGroup key={card.cardId} card={card} memberMap={memberMap} dictionary={dictionary} /> // Pass only dictionary
                             ))}
                         </Accordion>
                     </AccordionContent>

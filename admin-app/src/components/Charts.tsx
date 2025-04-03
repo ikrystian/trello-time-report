@@ -48,7 +48,21 @@ interface ChartsProps {
     timeData: ProcessedCardData[];
     listMap: Record<string, string>;
     memberMap: Record<string, { fullName: string; avatarUrl: string | null }>;
+    dictionary: ChartsDictionary; // Add dictionary prop
+    // lang prop removed as it's not currently used
 }
+
+// Define dictionary structure for Charts
+export interface ChartsDictionary {
+    hoursAxisLabel: string;
+    reportedHoursLabel: string;
+    userHoursTitle: string;
+    listHoursTitle: string;
+    unknownUser: string;
+    unknownList: string;
+    noData: string;
+}
+
 
 // Chart options (can be customized)
 const commonChartOptions = {
@@ -64,15 +78,15 @@ const commonChartOptions = {
     },
 };
 
-const barChartOptions = {
+const getBarChartOptions = (dictionary: ChartsDictionary) => ({
     ...commonChartOptions,
     scales: {
         y: {
             beginAtZero: true,
-            title: { display: true, text: 'Godziny' }
+            title: { display: true, text: dictionary.hoursAxisLabel } // Use dictionary
         },
     },
-};
+});
 
 const pieChartOptions = {
     ...commonChartOptions,
@@ -80,7 +94,7 @@ const pieChartOptions = {
 };
 
 
-export default function Charts({ timeData, listMap, memberMap }: ChartsProps) {
+export default function Charts({ timeData, listMap, memberMap, dictionary }: ChartsProps) { // Remove lang from destructuring
 
     // Calculate data for User Hours Chart (Bar)
     const userHoursData = useMemo(() => {
@@ -88,7 +102,8 @@ export default function Charts({ timeData, listMap, memberMap }: ChartsProps) {
         timeData.forEach(card => {
             card.timeEntries.forEach(entry => {
                 const userId = entry.memberId || 'unknown';
-                const userName = userId && memberMap[userId] ? memberMap[userId].fullName : 'Nieznany Użytkownik';
+                // Use dictionary for unknown user
+                const userName = userId && memberMap[userId] ? memberMap[userId].fullName : dictionary.unknownUser;
                 hoursByUser[userName] = (hoursByUser[userName] || 0) + (entry.hours || 0);
             });
         });
@@ -101,7 +116,7 @@ export default function Charts({ timeData, listMap, memberMap }: ChartsProps) {
             labels,
             datasets: [
                 {
-                    label: 'Zaraportowane Godziny',
+                    label: dictionary.reportedHoursLabel, // Use dictionary
                     data,
                     backgroundColor: 'rgba(54, 162, 235, 0.6)',
                     borderColor: 'rgba(54, 162, 235, 1)',
@@ -109,16 +124,17 @@ export default function Charts({ timeData, listMap, memberMap }: ChartsProps) {
                 },
             ],
         };
-    }, [timeData, memberMap]);
+    }, [timeData, memberMap, dictionary]); // Add dictionary dependency
 
     // Calculate data for List Hours Chart (Pie)
     const listHoursData = useMemo(() => {
         const hoursByList: Record<string, number> = {};
         timeData.forEach(card => {
             const listId = card.listId || 'unknown';
-            const listName = listMap[listId] || 'Nieznana Lista';
+            // Use dictionary for unknown list
+            const listName = listMap[listId] || dictionary.unknownList;
             const listHours = card.timeEntries.reduce((sum, entry) => sum + (entry.hours || 0), 0);
-            if (listHours > 0) { // Only include lists with reported time
+            if (listHours > 0) {
                 hoursByList[listName] = (hoursByList[listName] || 0) + listHours;
             }
         });
@@ -136,7 +152,7 @@ export default function Charts({ timeData, listMap, memberMap }: ChartsProps) {
             labels,
             datasets: [
                 {
-                    label: 'Zaraportowane Godziny',
+                    label: dictionary.reportedHoursLabel, // Use dictionary
                     data,
                     backgroundColor: backgroundColors,
                     borderColor: borderColors,
@@ -144,23 +160,24 @@ export default function Charts({ timeData, listMap, memberMap }: ChartsProps) {
                 },
             ],
         };
-    }, [timeData, listMap]);
+    }, [timeData, listMap, dictionary]); // Add dictionary dependency
 
+    // Get dynamic options based on dictionary
+    const dynamicBarOptions = useMemo(() => getBarChartOptions(dictionary), [dictionary]);
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
             {/* User Hours Chart */}
             <Card>
                 <CardHeader>
-                    <CardTitle className="text-center">Godziny na Użytkownika</CardTitle>
-                    {/* Optional: <CardDescription>...</CardDescription> */}
+                    <CardTitle className="text-center">{dictionary.userHoursTitle}</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <div className="relative h-64 md:h-80"> {/* Set height for canvas container */}
+                    <div className="relative h-64 md:h-80">
                         {userHoursData.labels.length > 0 ? (
-                            <Bar options={barChartOptions} data={userHoursData} />
+                            <Bar options={dynamicBarOptions} data={userHoursData} />
                         ) : (
-                            <p className="text-center text-muted-foreground pt-10">Brak danych</p>
+                            <p className="text-center text-muted-foreground pt-10">{dictionary.noData}</p>
                         )}
                     </div>
                 </CardContent>
@@ -169,14 +186,14 @@ export default function Charts({ timeData, listMap, memberMap }: ChartsProps) {
             {/* List Hours Chart */}
             <Card>
                 <CardHeader>
-                    <CardTitle className="text-center">Godziny na Listę</CardTitle>
+                    <CardTitle className="text-center">{dictionary.listHoursTitle}</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <div className="relative h-64 md:h-80"> {/* Set height for canvas container */}
+                    <div className="relative h-64 md:h-80">
                         {listHoursData.labels.length > 0 ? (
                             <Pie options={pieChartOptions} data={listHoursData} />
                         ) : (
-                            <p className="text-center text-muted-foreground pt-10">Brak danych</p>
+                            <p className="text-center text-muted-foreground pt-10">{dictionary.noData}</p>
                         )}
                     </div>
                 </CardContent>
