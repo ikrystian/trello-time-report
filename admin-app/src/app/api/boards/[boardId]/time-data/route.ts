@@ -158,7 +158,7 @@ export async function GET(
                   const entryDate = new Date(entry.date);
                   if (isNaN(entryDate.getTime())) return false; // More robust date check
 
-                  const start = startDate ? new Date(startDate) : null;
+                  const start = startDate ? new Date(new Date(startDate).getTime() + 24 * 60 * 60 * 1000) : null;
                   const end = endDate ? new Date(endDate) : null;
 
                   if (start && !isNaN(start.getTime()) && entryDate < start) {
@@ -169,7 +169,7 @@ export async function GET(
                      // Clone end date before modifying
                     const endOfDay = new Date(end);
                     endOfDay.setHours(23, 59, 59, 999);
-                    if (entryDate > endOfDay) return false;
+                    if (entryDate >= endOfDay) return false;
                   }
 
                   // User ID Filtering

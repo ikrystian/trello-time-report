@@ -6,7 +6,6 @@ import { useAuth } from "@clerk/nextjs"; // Import useAuth
 import AdminPanel from '@/components/AdminPanel'; // Import the new component
 import DashboardHeader from '@/components/DashboardHeader'; // Import the header component
 import PageTransition from '@/components/PageTransition'; // Import the page transition component
-import { useSearchParams, useRouter } from 'next/navigation';
 import { getFirstDayOfMonth, getLastDayOfMonth } from '@/lib/date-utils';
 import {
   Card,
@@ -35,28 +34,20 @@ interface Board {
 
 export default function DashboardPage() { // Renamed component
   const { isLoaded, userId } = useAuth(); // Get auth status
-  const searchParams = useSearchParams();
-  const router = useRouter();
-
-  // Get query params
-  const boardIdParam = searchParams.get('boardId');
-  const fromDateParam = searchParams.get('fromDate');
-  const toDateParam = searchParams.get('toDate');
-  const userIdParam = searchParams.get('userId');
-  const labelParam = searchParams.get('label');
 
   // Set default dates to first and last day of current month
-  const defaultFromDate = fromDateParam ? new Date(fromDateParam) : getFirstDayOfMonth();
-  const defaultToDate = toDateParam ? new Date(toDateParam) : getLastDayOfMonth();
+  const firstDayOfMonth = getFirstDayOfMonth();
+  const lastDayOfMonth = getLastDayOfMonth();
 
   const [boards, setBoards] = useState<Board[]>([]);
   const [openBoards, setOpenBoards] = useState<Board[]>([]);
   const [closedBoards, setClosedBoards] = useState<Board[]>([]);
-  const [selectedBoardId, setSelectedBoardId] = useState<string>(boardIdParam || '');
-  const [selectedFromDate, setSelectedFromDate] = useState<Date>(defaultFromDate);
-  const [selectedToDate, setSelectedToDate] = useState<Date>(defaultToDate);
-  const [selectedUserId, setSelectedUserId] = useState<string>(userIdParam || '');
-  const [selectedLabel, setSelectedLabel] = useState<string>(labelParam || '');
+  // Initialize selectedBoardId from localStorage if available
+  const [selectedBoardId, setSelectedBoardId] = useState<string>('');
+  const [selectedFromDate, setSelectedFromDate] = useState<Date>(firstDayOfMonth);
+  const [selectedToDate, setSelectedToDate] = useState<Date>(lastDayOfMonth);
+  const [selectedUserId, setSelectedUserId] = useState<string>('');
+  const [selectedLabel, setSelectedLabel] = useState<string>('');
   const [isLoadingBoards, setIsLoadingBoards] = useState<boolean>(true);
   const [errorBoards, setErrorBoards] = useState<string | null>(null);
 
@@ -109,67 +100,61 @@ export default function DashboardPage() { // Renamed component
     fetchBoards();
   }, [isLoaded, userId]); // Re-run if auth status changes
 
-  // Update query params when filters change
-  const updateQueryParams = () => {
-    // Get current URL params
-    const current = new URLSearchParams(window.location.search);
-    const currentParams = Object.fromEntries(current.entries());
-
-    // Create new params
-    const params = new URLSearchParams();
-    if (selectedBoardId) params.set('boardId', selectedBoardId);
-    if (selectedFromDate) params.set('fromDate', selectedFromDate.toISOString().split('T')[0]);
-    if (selectedToDate) params.set('toDate', selectedToDate.toISOString().split('T')[0]);
-    if (selectedUserId) params.set('userId', selectedUserId);
-    if (selectedLabel) params.set('label', selectedLabel);
-
-    // Convert to object for comparison
-    const newParams = Object.fromEntries(params.entries());
-
-    // Only update URL if params have changed to avoid infinite loops
-    if (JSON.stringify(currentParams) !== JSON.stringify(newParams)) {
-      // Update URL without refreshing the page
-      router.replace(`/dashboard?${params.toString()}`, { scroll: false });
+  // Effect to load board selection from localStorage when component mounts
+  useEffect(() => {
+    // Only run on client-side
+    if (typeof window !== 'undefined') {
+      try {
+        const savedBoardId = localStorage.getItem('selectedBoardId');
+        if (savedBoardId) {
+          setSelectedBoardId(savedBoardId);
+          console.log('Loaded board selection from localStorage:', savedBoardId);
+        }
+      } catch (error) {
+        console.error('Error loading board selection from localStorage:', error);
+      }
     }
-  };
+  }, []);
 
-  // Create a debounced version of updateQueryParams
-  const [debouncedUpdateParams] = useState(() => {
-    let timeoutId: NodeJS.Timeout | null = null;
+  // Effect to validate the saved board ID when boards are loaded
+  useEffect(() => {
+    if (!isLoadingBoards && boards.length > 0 && selectedBoardId) {
+      // Check if the selected board exists in the boards list
+      const boardExists = boards.some(board => board.id === selectedBoardId);
 
-    return () => {
-      if (timeoutId) clearTimeout(timeoutId);
-      timeoutId = setTimeout(() => {
-        updateQueryParams();
-        timeoutId = null;
-      }, 300); // 300ms debounce
-    };
-  });
+      if (!boardExists) {
+        console.warn('Selected board not found in available boards, resetting selection');
+        setSelectedBoardId('');
+        localStorage.removeItem('selectedBoardId');
+      }
+    }
+  }, [isLoadingBoards, boards, selectedBoardId]);
 
   // Handler for shadcn Select component
   const handleBoardSelect = (value: string) => {
     setSelectedBoardId(value);
-    debouncedUpdateParams();
+
+    // Save to localStorage
+    try {
+      localStorage.setItem('selectedBoardId', value);
+    } catch (error) {
+      console.error('Error saving board selection to localStorage:', error);
+    }
   };
 
   // Handlers for other filters
   const handleDateChange = (range: { from?: Date; to?: Date }) => {
     if (range.from) setSelectedFromDate(range.from);
     if (range.to) setSelectedToDate(range.to);
-    debouncedUpdateParams();
   };
 
   const handleUserSelect = (value: string) => {
     setSelectedUserId(value);
-    debouncedUpdateParams();
   };
 
   const handleLabelSelect = (value: string) => {
     setSelectedLabel(value);
-    debouncedUpdateParams();
   };
-
-  // Redirection is handled in the first useEffect
 
   // Render loading indicator if Clerk is not loaded
   if (!isLoaded) {

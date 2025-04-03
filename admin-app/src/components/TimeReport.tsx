@@ -191,18 +191,18 @@ export default function TimeReport({ timeData, listMap, memberMap }: TimeReportP
         return groupedAndSortedData.flatMap(listGroup => listGroup.cards.map(card => card.cardId));
     }, [groupedAndSortedData]);
 
-    // State to control open list accordions
+    // State to control open list accordions - expanded by default
     const [openListIds, setOpenListIds] = useState<string[]>(allListNames);
-    // State to control open card accordions
-    const [openCardIds, setOpenCardIds] = useState<string[]>(allCardIds);
+    // State to control open card accordions - collapsed by default
+    const [openCardIds, setOpenCardIds] = useState<string[]>([]);
 
     // Determine if everything is currently expanded
     const isAllExpanded = openListIds.length === allListNames.length && openCardIds.length === allCardIds.length;
 
     // Initialize open states when data changes
     React.useEffect(() => {
-        setOpenListIds(allListNames);
-        setOpenCardIds(allCardIds);
+        setOpenListIds(allListNames); // Keep lists expanded by default
+        setOpenCardIds([]); // Keep cards collapsed by default
     }, [allListNames, allCardIds]); // Depend on the calculated lists/cards
 
     const toggleAll = () => {
@@ -241,10 +241,10 @@ export default function TimeReport({ timeData, listMap, memberMap }: TimeReportP
                         {/* Removed manual triangle span */}
                         <span className="flex-grow mr-2 text-left">{listGroup.listName}</span>
                         <span className="text-sm font-normal text-muted-foreground whitespace-nowrap pr-2">
-                            (Est: {formatHours(listGroup.totalEstimatedHours)}h / Rep: {formatHours(listGroup.totalReportedHours)}h)
+                            (Szac: {formatHours(listGroup.totalEstimatedHours)}h / Rep: {formatHours(listGroup.totalReportedHours)}h)
                         </span>
                     </AccordionTrigger>
-                    <AccordionContent className="p-2 pl-4 border-t">
+                    <AccordionContent className="p-2 pl-4 border-t border-b">
                         {/* Inner Accordion now controlled by state */}
                         <Accordion
                             type="multiple"
