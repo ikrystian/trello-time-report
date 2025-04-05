@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
 import AdminPanel from '@/components/AdminPanel'; // Removed unused AdminPanelDictionary import
 import { type FiltersDictionary } from './Filters'; // Import FiltersDictionary
@@ -115,8 +115,9 @@ export default function AdminPanelWrapper({
   const [selectedLabel, setSelectedLabel] = useState<string>('');
   const [isLoadingBoards, setIsLoadingBoards] = useState<boolean>(!initialOpenBoards && !initialClosedBoards && !initialError); // Initial loading state based on props
   const [errorBoards, setErrorBoards] = useState<string | null>(initialError);
-
-  const allBoards = [...openBoards, ...closedBoards]; // Combine for validation
+  const allBoards = useMemo(() => {
+    return [...openBoards, ...closedBoards];
+  }, [openBoards, closedBoards]);
 
   // Function to fetch boards on client-side (e.g., for retry)
   const fetchBoards = async () => {
@@ -177,7 +178,7 @@ export default function AdminPanelWrapper({
    // Effect to re-validate selected board if boards list changes (e.g., after retry)
    useEffect(() => {
     if (selectedBoardId && allBoards.length > 0) {
-      const boardExists = allBoards.some(board => board.id === selectedBoardId);
+      const boardExists = allBoards.some((board: Board) => board.id === selectedBoardId);
       if (!boardExists) {
         console.warn('Selected board not found after board list update, resetting selection');
         setSelectedBoardId('');

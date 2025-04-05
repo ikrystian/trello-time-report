@@ -1,6 +1,15 @@
 'use client';
 
 import React, { useMemo } from 'react';
+import { type ProcessedCardData, type TrelloLabel } from '@/types/time-report';
+interface ChartsProps {
+    timeData: ProcessedCardData[];
+    listMap: Record<string, string>;
+    memberMap: Record<string, { fullName: string; avatarUrl: string | null }>;
+    dictionary: ChartsDictionary;
+}
+
+
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -31,18 +40,6 @@ interface TimeEntry {
     date?: string;
     hours: number;
     comment: string;
-}
-
-// Updated ProcessedCardData interface
-interface ProcessedCardData {
-    cardId: string;
-    cardName: string;
-    cardUrl: string;
-    listId: string;
-    memberIds: string[];
-    labels: { id: string; name: string; color: string }[]; // Added labels property
-    estimatedHours: number;
-    timeEntries: TimeEntry[];
 }
 
 // Updated ChartsProps interface
@@ -77,14 +74,16 @@ const commonChartOptions = {
 // Corrected syntax for getBarChartOptions
 const getBarChartOptions = (dictionary: ChartsDictionary) => ({
     ...commonChartOptions,
+    indexAxis: 'y' as const, // Set to 'y' for horizontal bars
     scales: {
-        y: {
+        x: { // Values (hours) are now on the x-axis
             beginAtZero: true,
             title: { display: true, text: dictionary.hoursAxisLabel }
         },
-        // x: { // Optional: Add x-axis title if desired
-        //     title: { display: true, text: 'Labels' }
-        // }
+        y: { // Categories (labels) are now on the y-axis
+            // Optional: Add y-axis title if desired
+            // title: { display: true, text: 'Labels' }
+        }
     },
 }); // Correctly closed object and function call
 
@@ -94,12 +93,12 @@ export default function Charts({ timeData, dictionary }: ChartsProps) {
     // Calculate data for Label Hours Chart (Bar)
     const labelHoursData = useMemo(() => {
         const hoursByLabel: Record<string, number> = {};
-        timeData.forEach(card => {
-            const cardTotalHours = card.timeEntries.reduce((sum, entry) => sum + (entry.hours || 0), 0);
+        timeData.forEach((card: ProcessedCardData) => {
+            const cardTotalHours = card.timeEntries.reduce((sum: number, entry: TimeEntry) => sum + (entry.hours || 0), 0);
 
             if (cardTotalHours > 0 && card.labels && card.labels.length > 0) {
                 const hoursPerLabel = cardTotalHours / card.labels.length;
-                card.labels.forEach(label => {
+                card.labels.forEach((label: TrelloLabel) => {
                     // Ensure label and label.name are accessed safely
                     const labelName = label?.name || 'Unnamed Label';
                     hoursByLabel[labelName] = (hoursByLabel[labelName] || 0) + hoursPerLabel;

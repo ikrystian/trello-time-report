@@ -10,8 +10,7 @@ import { SkeletonAccordion } from './SkeletonAccordion';
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
-// import { Button } from "@/components/ui/button"; // Removed unused import
-// import Link from 'next/link'; // Removed unused import
+
 
 // Define interfaces based on the API response structure (keep as is)
 interface TimeEntry {
@@ -21,13 +20,13 @@ interface TimeEntry {
     comment: string;
 }
 
-interface TrelloLabel {
+export interface TrelloLabel {
     id: string;
     name: string;
     color: string;
 }
 
-interface ProcessedCardData {
+export interface ProcessedCardData {
     cardId: string;
     cardName: string;
     cardUrl: string;
@@ -244,8 +243,6 @@ export default function AdminPanel({
                     <SkeletonAccordion listCount={3} cardCount={4} />
                 </div>
             )}
-            {/* Display Trello Connect button if needed (This is now handled upstream) */}
-            {/* {needsTrelloAuth && ( ... )} */}
 
             {/* Display general error */}
             {error && <p className="text-center text-destructive py-4">{`${dictionary.common.error}: ${error}`}</p>}
@@ -268,10 +265,7 @@ export default function AdminPanel({
                                 timeData={timeData}
                                 listMap={listMap}
                                 memberMap={memberMap}
-                                // Pass dictionary to TimeReport
-                                // TODO: Define TimeReportProps and TimeReportDictionary type in TimeReport.tsx
                                 dictionary={dictionary.dashboard.timeReportSection}
-                                // Remove lang prop
                             />
                         )}
                     </TabsContent>
@@ -295,10 +289,7 @@ export default function AdminPanel({
                                 timeData={timeData}
                                 listMap={listMap}
                                 memberMap={memberMap}
-                                // Pass dictionary to Charts
-                                // TODO: Define ChartsProps and ChartsDictionary type in Charts.tsx
                                 dictionary={dictionary.dashboard.chartsSection}
-                                // lang prop removed as Charts no longer accepts it
                             />
                         )}
                     </TabsContent>

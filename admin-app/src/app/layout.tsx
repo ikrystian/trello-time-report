@@ -53,6 +53,7 @@ export default function RootLayout({
         <head />{/* Ensure no whitespace before head */}
         <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        suppressHydrationWarning={true} // Add suppressHydrationWarning
       >
         <ThemeProvider
           attribute="class"
